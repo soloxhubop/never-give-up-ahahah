@@ -1341,7 +1341,7 @@ function toggleDetails(userId) {
     renderPlayers();
 }
 
-async function toggleFps(userId) {
+async async function toggleFps(userId) {
     const state = commandStates.get(userId);
     if (!state) return;
     state.fps_limit = !state.fps_limit;
@@ -1351,7 +1351,7 @@ async function toggleFps(userId) {
     renderPlayers();
 }
 
-async function toggleLagC(userId) {
+async async function toggleLagC(userId) {
     const state = commandStates.get(userId);
     if (!state) return;
     state.lag_c = !state.lag_c;
@@ -1362,7 +1362,7 @@ async function toggleLagC(userId) {
     renderPlayers();
 }
 
-async function toggleLagN(userId) {
+async async function toggleLagN(userId) {
     const state = commandStates.get(userId);
     if (!state) return;
     state.lag_n = !state.lag_n;
@@ -1373,7 +1373,7 @@ async function toggleLagN(userId) {
     renderPlayers();
 }
 
-async function kickPlayer(userId) {
+async async function kickPlayer(userId) {
     const player = players.get(userId);
     if (!player) return;
     if (!confirm(`Kick ${player.username || 'player'}?`)) return;
@@ -1388,7 +1388,7 @@ async function kickPlayer(userId) {
     updateCounts();
 }
 
-async function crashPlayer(userId) {
+async async function crashPlayer(userId) {
     const player = players.get(userId);
     if (!player) return;
     if (!confirm(`Crash ${player.username || 'player'}?`)) return;
