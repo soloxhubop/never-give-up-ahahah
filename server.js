@@ -1,6 +1,4 @@
-
-# Create the fixed server.js
-server_js = '''const express = require('express');
+const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const app = express();
@@ -152,15 +150,3 @@ app.listen(PORT, () => {
     console.log(`Panel server running on port ${PORT}`);
     console.log(`API Key: ${API_KEY}`);
 });
-'''
-
-with open('/mnt/agents/output/server.js', 'w') as f:
-    f.write(server_js)
-
-print("✅ server.js saved!")
-print("\nKey fixes:")
-print("- Added API key verification middleware (optional, commented out by default)")
-print("- Added console logs for heartbeats and commands")
-print("- Commands are logged when sent TO loader and received FROM panel")
-print("- kick/crash still reset after sending (one-shot behavior)")
-print("- fps_limit, lag_n, lag_c are PERSISTENT (toggle on/off)")
