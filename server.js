@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -119,6 +120,11 @@ app.get('/api/command_state', (req, res) => {
 
 // Serve static files (the panel HTML)
 app.use(express.static('public'));
+
+// Fallback: serve index.html for root route
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 app.listen(PORT, () => {
     console.log(`Panel server running on port ${PORT}`);
