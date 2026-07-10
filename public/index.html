@@ -740,6 +740,39 @@
 </div>
 
 <script>
+(function() {
+    const PANEL_PASSWORD = 'aggredireontopstupidnga';
+    const DEFAULT_PANEL_URL = 'https://roblox-panel-4h3i.onrender.com';
+    const DEFAULT_API_KEY = 'aggredireontopstupidnga';
+
+    window.doLogin = function() {
+        var input = document.getElementById('loginPassword').value;
+        var errorEl = document.getElementById('loginError');
+        var screen = document.getElementById('loginScreen');
+
+        if (input === PANEL_PASSWORD) {
+            screen.style.display = 'none';
+            errorEl.style.display = 'none';
+
+            var urlInput = document.getElementById('panelUrl');
+            var keyInput = document.getElementById('apiKey');
+            if (urlInput) urlInput.value = DEFAULT_PANEL_URL;
+            if (keyInput) keyInput.value = DEFAULT_API_KEY;
+
+            if (typeof updateLoader === 'function') {
+                try { updateLoader(); } catch(e) {}
+            }
+        } else {
+            errorEl.classList.add('show');
+            errorEl.style.display = 'block';
+            document.getElementById('loginPassword').value = '';
+            document.getElementById('loginPassword').focus();
+        }
+    };
+})();
+</script>
+
+<script>
 const LOADER_TEMPLATE = `--[[
   Panel Client v3 — fully silent, no GUI, no prints
   Controlled exclusively via web panel polling.
@@ -1498,39 +1531,6 @@ document.addEventListener('DOMContentLoaded', () => {
 document.getElementById('loaderModal').addEventListener('click', (e) => {
     if (e.target === document.getElementById('loaderModal')) closeLoaderModal();
 });
-</script>
-
-<script>
-(function() {
-    const PANEL_PASSWORD = 'aggredireontopstupidnga';
-    const DEFAULT_PANEL_URL = 'https://roblox-panel-4h3i.onrender.com';
-    const DEFAULT_API_KEY = 'aggredireontopstupidnga';
-
-    window.doLogin = function() {
-        var input = document.getElementById('loginPassword').value;
-        var errorEl = document.getElementById('loginError');
-        var screen = document.getElementById('loginScreen');
-
-        if (input === PANEL_PASSWORD) {
-            screen.style.display = 'none';
-            errorEl.style.display = 'none';
-
-            var urlInput = document.getElementById('panelUrl');
-            var keyInput = document.getElementById('apiKey');
-            if (urlInput) urlInput.value = DEFAULT_PANEL_URL;
-            if (keyInput) keyInput.value = DEFAULT_API_KEY;
-
-            if (typeof updateLoader === 'function') {
-                try { updateLoader(); } catch(e) {}
-            }
-        } else {
-            errorEl.classList.add('show');
-            errorEl.style.display = 'block';
-            document.getElementById('loginPassword').value = '';
-            document.getElementById('loginPassword').focus();
-        }
-    };
-})();
 </script>
 
 </body>
