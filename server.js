@@ -66,7 +66,6 @@ app.get('/api/public/command', (req, res) => {
     const state = commandStates.get(userId) || { fps_limit: false, lag_n: false, lag_c: false, kick: false, crash: false };
     const cmd = { ...state };
 
-    // Clear one-shot commands after sending
     const s = commandStates.get(userId);
     if (s) {
         s.kick = false;
@@ -118,10 +117,10 @@ app.get('/api/command_state', (req, res) => {
     res.json(state);
 });
 
-// Serve static files (the panel HTML)
-app.use(express.static('public'));
+// Serve static files — USA __dirname per il path assoluto!
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Fallback: serve index.html for root route
+// Fallback: se qualcuno va su /, servi index.html
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
