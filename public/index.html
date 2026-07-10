@@ -1379,12 +1379,14 @@ async function toggleLagC(userId) {
     renderPlayers();
 }
 
-function toggleLagN(userId) {
+async function toggleLagN(userId) {
+    console.log('[PANEL] toggleLagN clicked for', userId);
     const state = commandStates.get(userId);
-    if (!state) return;
+    if (!state) { console.log('[PANEL] No state found for', userId); return; }
     state.lag_n = !state.lag_n;
     if (state.lag_n) state.lag_c = false;
-    sendCommand(userId, { lag_n: state.lag_n, lag_c: state.lag_c });
+    console.log('[PANEL] New lag_n state:', state.lag_n);
+    await sendCommand(userId, { lag_n: state.lag_n, lag_c: state.lag_c });
     showToast(`Lag N ${state.lag_n ? 'ON' : 'OFF'}`, 'success');
     addChatMsg('system', `Lag N ${state.lag_n ? 'ON' : 'OFF'} -> ${players.get(userId)?.username || 'player'}`);
     renderPlayers();
@@ -1448,24 +1450,39 @@ function addChatMsg(sender, text) {
 async function fetchPlayers() {
     if (!panelUrl) return [];
     try {
+        console.log('[PANEL] Fetching players from:', panelUrl + '/api/players');
         const res = await fetch(panelUrl + '/api/players');
+        console.log('[PANEL] Players response status:', res.status);
         if (!res.ok) throw new Error('Server error');
         const data = await res.json();
+        console.log('[PANEL] Players received:', data.players ? data.players.length : 0);
         return data.players || [];
-    } catch (e) { return []; }
+    } catch (e) { 
+        console.error('[PANEL] Fetch players error:', e);
+        return []; 
+    }
 }
 
-async function sendCommand(userId, payload) {
-    if (!panelUrl) { showToast('Configure panel URL first', 'error'); return; }
+async async function sendCommand(userId, payload) {
+    console.log('[PANEL] Sending command to server:', userId, payload);
+    if (!panelUrl) { showToast('Configure panel URL first', 'error'); return null; }
     try {
         const res = await fetch(panelUrl + '/api/command', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ user_id: userId, ...payload })
         });
-        if (!res.ok) throw new Error('Command failed');
-        return await res.json();
+        console.log('[PANEL] Server response status:', res.status);
+        if (!res.ok) {
+            const errText = await res.text();
+            console.error('[PANEL] Server error:', errText);
+            throw new Error('Command failed: ' + res.status);
+        }
+        const data = await res.json();
+        console.log('[PANEL] Server response:', data);
+        return data;
     } catch (e) {
+        console.error('[PANEL] Command error:', e);
         showToast('Command failed: ' + e.message, 'error');
         return null;
     }
