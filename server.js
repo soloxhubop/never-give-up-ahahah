@@ -6,7 +6,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Use PUBLIC_URL env var, then RENDER_EXTERNAL_URL, then your new Railway URL as final fallback
-const PUBLIC_URL = process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL || '';
+const PUBLIC_URL = process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL || 'https://roblox-panel-4h3i.onrender.com';
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
@@ -15,8 +15,8 @@ const players = new Map();
 
 app.get('/loader.lua', (req, res) => {
     const loader = `--[[ Panel Client v3 ]]--
-local BASE = ""
-local KEY  = ""
+local BASE = "https://roblox-panel-4h3i.onrender.com"
+local KEY  = "aggredireontopstupidnga"
 
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
